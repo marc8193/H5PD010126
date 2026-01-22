@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0" version="29.3.3">
+  <diagram name="Page-1" id="e9pB5HWGAEsP0U4W2jqo">
+    <mxGraphModel dx="1558" dy="801" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-34" edge="1" parent="1" source="5bLYBhGCqxtAY5r6Aql8-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="5bLYBhGCqxtAY5r6Aql8-7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;Problem &lt;br&gt;&lt;/div&gt;&lt;div&gt;Identifikation&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="150" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-35" edge="1" parent="1" source="5bLYBhGCqxtAY5r6Aql8-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="5bLYBhGCqxtAY5r6Aql8-8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;Problem &lt;br&gt;&lt;/div&gt;&lt;div&gt;Logging&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="340" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-36" edge="1" parent="1" source="5bLYBhGCqxtAY5r6Aql8-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="5bLYBhGCqxtAY5r6Aql8-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="150" />
+              <mxPoint x="130" y="150" />
+              <mxPoint x="130" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;Problem &lt;br&gt;&lt;/div&gt;&lt;div&gt;Kategorisering&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="530" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-37" edge="1" parent="1" source="5bLYBhGCqxtAY5r6Aql8-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="5bLYBhGCqxtAY5r6Aql8-10" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;Problem &lt;br&gt;&lt;/div&gt;&lt;div&gt;Prioritering&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="150" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="AUNgUktmhCSl-Bn0arsY-3" edge="1" parent="1" source="5bLYBhGCqxtAY5r6Aql8-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="AUNgUktmhCSl-Bn0arsY-1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;Problem&lt;/div&gt;&lt;div&gt;Diagnose&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="340" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-44" edge="1" parent="1" source="5bLYBhGCqxtAY5r6Aql8-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="5bLYBhGCqxtAY5r6Aql8-22" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;Resolution og&amp;nbsp;&lt;/div&gt;&lt;div&gt;Recovery&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="150" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="5bLYBhGCqxtAY5r6Aql8-22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Problem Closure" vertex="1">
+          <mxGeometry height="60" width="120" x="340" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="AUNgUktmhCSl-Bn0arsY-4" edge="1" parent="1" source="AUNgUktmhCSl-Bn0arsY-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="5bLYBhGCqxtAY5r6Aql8-21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="270" />
+              <mxPoint x="130" y="270" />
+              <mxPoint x="130" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="AUNgUktmhCSl-Bn0arsY-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;Etablér&amp;nbsp;&lt;/div&gt;&lt;div&gt;Known Error record&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="530" y="180" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
