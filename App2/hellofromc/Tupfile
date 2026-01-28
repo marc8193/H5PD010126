@@ -59,7 +59,7 @@ LABEL = $(APP_NAME)
 BUILD_TOOLS = /home/mhl/Android/Sdk/build-tools/36.1.0
 ANDROID_JAR = /home/mhl/Android/Sdk/platforms/android-$(ANDROID_VERSION)/android.jar
 
-: $(ANDROID_JAR) $(BUILD_ROOT)/AndroidManifest.xml $(PROJECT_ROOT)/sources/res $(PROJECT_ROOT)/sources/assets |> $(BUILD_TOOLS)/aapt package -f -F %o -I $(ANDROID_JAR) -M $(BUILD_ROOT)/AndroidManifest.xml -S $(PROJECT_ROOT)/sources/res -A $(PROJECT_ROOT)/sources/assets --target-sdk-version $(ANDROID_VERSION) -v |> $(BUILD_ROOT)/$(APP_NAME).apk.uncompressed
+: $(ANDROID_JAR) $(BUILD_ROOT)/AndroidManifest.xml $(APP_ROOT)/res $(APP_ROOT)/assets |> $(BUILD_TOOLS)/aapt package -f -F %o -I $(ANDROID_JAR) -M $(BUILD_ROOT)/AndroidManifest.xml -S $(APP_ROOT)/res -A $(APP_ROOT)/assets --target-sdk-version $(ANDROID_VERSION) -v |> $(BUILD_ROOT)/$(APP_NAME).apk.uncompressed
 
 : $(BUILD_ROOT)/$(APP_NAME).apk.uncompressed \
   $(BUILD_ROOT)/lib/arm64-v8a/lib$(APP_NAME).so \
