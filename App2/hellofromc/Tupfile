@@ -6,18 +6,17 @@ ANDROID_NDK = ~/Android/Sdk/ndk/29.0.14206865
 
 APP_NAME = hellofromc
 
-PROJECT_ROOT = /home/mhl/Projects/School/H5/App2/hellofromc
+PROJECT_ROOT = /home/mhl/projects/H5PD010126/App2/hellofromc
 APP_ROOT = $(PROJECT_ROOT)/app
 BUILD_ROOT = $(PROJECT_ROOT)/build
 
-SOURCES = $(APP_ROOT)/main.c $(APP_ROOT)/android_native_app_glue.c
+SOURCES = $(APP_ROOT)/android.c $(APP_ROOT)/android_renderer.c $(APP_ROOT)/lib/android_native_app_glue.c $(APP_ROOT)/lib/microui/src/microui.c
 
 CFLAGS = -ffunction-sections -Os -fdata-sections -Wall -fvisibility=hidden -DANDROID -DAPPNAME=\"$(APP_NAME)\" \
 	   	 -I$(ANDROID_NDK)/sysroot/usr/include -I$(ANDROID_NDK)/sysroot/usr/include/android \
 		 -I$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/include \
 		 -I$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/include/android -fPIC \
-		 -I$(APP_ROOT) -DANDROIDVERSION=$(ANDROID_VERSION)
-
+		 -I$(APP_ROOT)/lib/microui/src -I$(APP_ROOT) -I$(APP_ROOT)/lib -DANDROIDVERSION=$(ANDROID_VERSION)
 
 LDFLAGS = -Wl,--gc-sections -s -lm -lGLESv3 -lEGL -landroid -llog \
 		  -lOpenSLES -shared -uANativeActivity_onCreate
