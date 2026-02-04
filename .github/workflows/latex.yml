@@ -1,0 +1,29 @@
+name: "Build LaTeX PDF on Release"
+
+on:
+  release:
+    types: ["published"]   # Trigger only when a release is published
+
+jobs:
+  build-pdf:
+    runs-on: "ubuntu-22.04"
+
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
+
+      - name: "Install LaTeX"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+
+      - name: "Compile LaTeX to PDF"
+        run: |
+          cd TværfagligtProjekt/docs
+          pdflatex test.tex
+
+      - name: "Upload PDF as artifact"
+        uses: "actions/upload-artifact@v3"
+        with:
+          name: "test-pdf"
+          path: "TværfagligtProjekt/docs/test.pdf"
