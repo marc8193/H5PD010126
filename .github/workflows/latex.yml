@@ -15,19 +15,23 @@ jobs:
       - name: "Install LaTeX"
         run: |
           sudo apt-get update
-          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+          sudo apt-get install -y \
+            texlive-latex-base \
+            texlive-latex-recommended \
+            texlive-latex-extra \
+            texlive-fonts-recommended
 
       - name: "Compile LaTeX to PDF"
         run: |
           cd TværfagligtProjekt/docs
           pdflatex test.tex
 
-	  - name: "Attach PDF to Release"
-  	  	uses: "actions/upload-release-asset@v1.0.2"
-  		with:
-			upload_url: ${{ github.event.release.upload_url }}
-    		asset_path: "TværfagligtProjekt/docs/test.pdf"
-    		asset_name: "test.pdf"
-    		asset_content_type: "application/pdf"
-  		env:
-			GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Attach PDF to Release"
+        uses: "actions/upload-release-asset@v1.0.2"
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: "TværfagligtProjekt/docs/test.pdf"
+          asset_name: "test.pdf"
+          asset_content_type: "application/pdf"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
