@@ -15,5 +15,5 @@
 | L2   | Noter skal automatisk gemmes                                                           | 1         |
 | L3   | Konfigurerede synkroniseringsenheder skal lagres persistent                            | 1         |
 | U1   | Alle noter i oversigten skal synkroniseres med de konfigurerede synkroniseringsenheder | 1         |
-| U2   | Systemet skal håndtere offline-noter og synkronisere, når netværk er tilgængeligt      | 1         |
+| U2   | Systemet skal håndtere offline-noter og synkronisere, når netværk er tilgængeligt      | 2         |
 | U3   | Systemet skal håndtere konflikter ved samtidige ændringer                              | 2         |
