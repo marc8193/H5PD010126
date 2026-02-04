@@ -1,5 +1,8 @@
 name: "Build LaTeX PDF and Attach to Release"
 
+permissions:
+  contents: write
+
 on:
   release:
     types: ["published"]  # Trigger only when a release is published
