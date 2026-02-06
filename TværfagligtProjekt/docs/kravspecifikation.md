@@ -7,10 +7,8 @@
 |------|----------------------------------------------------------------------------------------|-----------|
 | G1   | Grænsefladen skal vise en oversigt over alle noter                                     | 1         |
 | G2   | Grænsefladen skal kunne oprette nye noter fra oversigten                               | 1         |
-| G3   | Grænsefladen skal understøtte CommonMark-standarden                                    | 1         |
-| G4   | Grænsefladen skal live-render Markdown ved linjeskift                                  | 1         |
-| G5   | Grænsefladen skal kunne tilføje synkroniseringsenheder                                 | 1         |
-| G6   | Grænsefladen skal kunne sortere noter i oversigten                                     | 2         |
+| G3   | Grænsefladen skal kunne tilføje synkroniseringsenheder                                 | 1         |
+| G4   | Grænsefladen skal kunne sortere noter i oversigten                                     | 2         |
 | L1   | Noter skal lagres persistent                                                           | 1         |
 | L2   | Noter skal automatisk gemmes                                                           | 1         |
 | L3   | Konfigurerede synkroniseringsenheder skal lagres persistent                            | 1         |
