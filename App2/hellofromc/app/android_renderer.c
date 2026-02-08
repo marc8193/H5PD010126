@@ -1,88 +1,87 @@
 #include <android_native_app_glue.h>
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
-#include <android/log.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "renderer.h"
 #include "atlas.inl"
 #include "log.h"
 
-EGLDisplay display;
-EGLSurface surface;
-EGLContext context;
+#define MAX_VERTICES 4096
+#define MAX_QUADS (MAX_VERTICES / 4)
+#define MAX_INDICES (MAX_QUADS * 6)
 
-static int buffer_index;
+static EGLDisplay display;
+static EGLSurface surface;
+static EGLContext context;
+
 static int width;
 static int height;
 
-static GLuint program;
 static GLuint vertex_array_object;
-static GLuint vertex_buffer_objects[3];
+static GLuint vertex_buffer_object;
 static GLuint element_buffer_object;
-static GLint u_projection_loc;
 
-#define MAX_VERTICES 4096
+static GLuint shader_program;
+static GLuint texture;
 
-// Position buffer (2 floats per vertex)
-GLsizeiptr buffer_size_pos = MAX_VERTICES * 2 * sizeof(float);
+typedef struct {
+  GLfloat position[2];
+  GLfloat texture_coordinates[2];
+  GLubyte color[4];
+} Vertex;
 
-// UV buffer (2 floats per vertex)
-GLsizeiptr buffer_size_uv  = MAX_VERTICES * 2 * sizeof(float);
+static Vertex vertices[MAX_VERTICES];
+static GLuint indices[MAX_INDICES];
+static int buffer_index;
 
-// Color buffer (4 bytes per vertex)
-GLsizeiptr buffer_size_color = MAX_VERTICES * 4 * sizeof(uint8_t);
-
-#define BUFFER_SIZE 16384
-
-static GLfloat   texture_buffer[BUFFER_SIZE *  8];
-static GLfloat  vertex_buffer[BUFFER_SIZE *  8];
-static GLubyte color_buffer[BUFFER_SIZE * 16];
-static GLuint  index_buffer[BUFFER_SIZE *  6];
-
-static const char *vertex_shader_src = R"(
-#version 300 es
+static const char* vertex_shader_source = R"(#version 300 es
 precision mediump float;
 
-layout(location = 0) in vec2 a_pos;
-layout(location = 1) in vec2 a_uv;
-layout(location = 2) in vec4 a_color;
+layout (location = 0) in vec2 a_position;
+layout (location = 1) in vec2 a_texture_coordinates;
+layout (location = 2) in vec4 a_color;
 
-uniform mat4 u_proj;
+uniform mat4 u_projection;
 
-out vec2 v_uv;
-out vec4 v_color;
+out vec2 texture_coordinates;
+out vec4 color;
 
-void main() {
-    gl_Position = u_proj * vec4(a_pos, 0.0, 1.0);
-    v_uv = a_uv;
-    v_color = a_color;
+void main()
+{
+  gl_Position = u_projection * vec4(a_position, 0.0, 1.0);
+  texture_coordinates = a_texture_coordinates;
+  color = a_color;
 }
 )";
 
-static const char *fragment_shader_src = R"(
-#version 300 es
+static const char* fragment_shader_source = R"(#version 300 es
 precision mediump float;
 
-in vec2 v_uv;
-in vec4 v_color;
-uniform sampler2D u_tex;
-out vec4 fragColor;
+in vec2 texture_coordinates;
+in vec4 color;
 
-void main() {
-    // single-channel atlas texture
-    float alpha = texture(u_tex, v_uv).r;
-    fragColor = vec4(v_color.rgb, v_color.a * alpha);
-}
+uniform sampler2D u_texture;
+
+out vec4 o_color;
+
+void main()
+{
+  float alpha = texture(u_texture, texture_coordinates).r; 
+  //o_color = vec4(color.rgb, color.a * alpha);
+
+  o_color = texture(u_texture, texture_coordinates);
+} 
 )";
 
 void r_init(ANativeWindow* window) {
   width  = ANativeWindow_getWidth(window);
   height = ANativeWindow_getHeight(window);
-
-  // Init EGL
+  
+  /* Init EGL */
   const EGLint attribs[] = {
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -107,66 +106,88 @@ void r_init(ANativeWindow* window) {
 
   eglMakeCurrent(display, surface, surface, context);
 
-  // Init GLES
+  /* Init GLES */
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_SCISSOR_TEST);
-
+  
+  glViewport(0, 0, width, height);
+   
   glGenVertexArrays(1, &vertex_array_object);
   glBindVertexArray(vertex_array_object);
 
-  glGenBuffers(3, vertex_buffer_objects);
+  glGenBuffers(1, &vertex_buffer_object);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), NULL, GL_DYNAMIC_DRAW);
+
+  /* Position */
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+  glEnableVertexAttribArray(0);
+
+  /* Texture Coordinates */
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+						(void*)offsetof(Vertex, texture_coordinates));
+  
+  glEnableVertexAttribArray(1);
+
+  /* Color */
+  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+  glEnableVertexAttribArray(2);
 
   glGenBuffers(1, &element_buffer_object);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_VERTICES * 6 * sizeof(uint32_t), NULL, GL_DYNAMIC_DRAW);
-
-  // Position
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_objects[0]);
-  glBufferData(GL_ARRAY_BUFFER, buffer_size_pos, NULL, GL_DYNAMIC_DRAW);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(0);
-
-  // UV
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_objects[1]);
-  glBufferData(GL_ARRAY_BUFFER, buffer_size_uv, NULL, GL_DYNAMIC_DRAW);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(1);
-
-  // Color
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_objects[2]);
-  glBufferData(GL_ARRAY_BUFFER, buffer_size_color, NULL, GL_DYNAMIC_DRAW);
-  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
-  glEnableVertexAttribArray(2);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_INDICES * sizeof(GLuint), NULL, GL_STATIC_DRAW);
   
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_src, NULL);
+  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
   glCompileShader(vertex_shader);
 
-  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_src, NULL);
-  glCompileShader(fragment_shader);
+  GLint success;
+  size_t message_length = 512;
+  char message[message_length];
+  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+	glGetShaderInfoLog(vertex_shader, message_length, NULL, message);
+	fprintf(stderr, "Shader compilation failed: %s\n", message);
+	assert(0);
+  }
 
-  program = glCreateProgram();
-  glAttachShader(program, vertex_shader);
-  glAttachShader(program, fragment_shader);
-  glLinkProgram(program);
+  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
+  glCompileShader(fragment_shader);
+  glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+	glGetShaderInfoLog(fragment_shader, message_length, NULL, message);
+	fprintf(stderr, "Shader compilation failed: %s\n", message);
+	assert(0);
+  }
+  
+  shader_program = glCreateProgram();
+  glAttachShader(shader_program, vertex_shader);
+  glAttachShader(shader_program, fragment_shader);
+  glLinkProgram(shader_program);
+  glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+  if (!success) {
+	glGetProgramInfoLog(shader_program, message_length, NULL, message);
+	fprintf(stderr, "Shader program linking failed: %s\n", message);
+	assert(0);
+  }
 
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 
-  // Init texture
-  GLuint id;
-  glGenTextures(1, &id);
-  glBindTexture(GL_TEXTURE_2D, id);
-
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, ATLAS_WIDTH, ATLAS_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE,
 			   atlas_texture);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture);
 
   assert(glGetError() == 0);
 }
@@ -174,85 +195,82 @@ void r_init(ANativeWindow* window) {
 static void flush(void) {
   if (buffer_index == 0) return;
 
-  glViewport(0, 0, width, height);
-  glUseProgram(program);
+  glUseProgram(shader_program);
   
   float ortho_projection[16] = {
 	2.0f / width, 0,              0, 0,
-	0,            2.0f / height,  0, 0,
+	0,           -2.0f / height,  0, 0,
 	0,            0,             -1, 0,
-   -1,           -1,              0, 1
+   -1,            1,              0, 1
   };
 
-  glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, ortho_projection);
+  GLint u_projection_location = glGetUniformLocation(shader_program, "u_projection");
+  glUniformMatrix4fv(u_projection_location, 1, GL_FALSE, ortho_projection);
 
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glUniform1i(glGetUniformLocation(shader_program, "u_texture"), 0);
+  
   glBindVertexArray(vertex_array_object);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_objects[0]);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, buffer_index * sizeof(float)*2, vertex_buffer);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_objects[1]);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, buffer_index * sizeof(float)*2, texture_buffer);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_objects[2]);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, buffer_index * sizeof(uint32_t)*4, color_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, buffer_index * 4 * sizeof(Vertex), vertices);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object);
+  glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, buffer_index * 6 * sizeof(GLuint), indices);
 
   glDrawElements(GL_TRIANGLES, buffer_index * 6, GL_UNSIGNED_INT, 0);
-  glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, buffer_index * 6 * sizeof(uint32_t), index_buffer);
 
   glBindVertexArray(0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   buffer_index = 0;
 }
 
 static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
-  if (buffer_index == BUFFER_SIZE) { flush(); }
+  if (buffer_index == MAX_QUADS) {
+	flush();
+  }
+  
+  int base_vertex = buffer_index * 4; /* 4 vertices per quad */
+  int base_index  = buffer_index * 6; /* 6 indices per quad */
 
-  int texture_vertex_index = buffer_index * 8;
-  int color_index = buffer_index * 16;
-  int element_index = buffer_index * 4;
-  int index_index = buffer_index * 6;
+  /* Top left */
+  vertices[base_vertex + 0] = (Vertex){ .position = { dst.x, dst.y },
+										.texture_coordinates = { src.x / ATLAS_WIDTH,
+																 src.y / ATLAS_HEIGHT },
+										
+										.color = { color.r, color.g, color.b, color.a }};
+
+  /* Top right */
+  vertices[base_vertex + 1] = (Vertex){ .position = { dst.x + dst.w, dst.y },
+										.texture_coordinates = { (src.x + src.w) / ATLAS_WIDTH,
+																 src.y / ATLAS_HEIGHT },
+										
+										.color = { color.r, color.g, color.b, color.a }};
+
+  /* Bottom left */
+  vertices[base_vertex + 2] = (Vertex){ .position = { dst.x, dst.y + dst.h },
+										.texture_coordinates = { src.x / ATLAS_WIDTH,
+																 (src.y + src.h) / ATLAS_HEIGHT },
+										
+										.color = { color.r, color.g, color.b, color.a }};
+
+  /* Bottom right */
+  vertices[base_vertex + 3] = (Vertex){ .position = { dst.x + dst.w, dst.y + dst.h },
+										.texture_coordinates = { (src.x + src.w) / ATLAS_WIDTH,
+																 (src.y + src.h) / ATLAS_HEIGHT },
+										
+										.color = { color.r, color.g, color.b, color.a }};
+
+  indices[base_index + 0] = base_vertex + 0;
+  indices[base_index + 1] = base_vertex + 1;
+  indices[base_index + 2] = base_vertex + 2;
+  indices[base_index + 3] = base_vertex + 2;
+  indices[base_index + 4] = base_vertex + 1;
+  indices[base_index + 5] = base_vertex + 3;
+  
   buffer_index++;
-
-  // Update texture buffer
-  float x = src.x / (float) ATLAS_WIDTH;
-  float y = src.y / (float) ATLAS_HEIGHT;
-  float w = src.w / (float) ATLAS_WIDTH;
-  float h = src.h / (float) ATLAS_HEIGHT;
-  texture_buffer[texture_vertex_index + 0] = x;
-  texture_buffer[texture_vertex_index + 1] = y;
-  texture_buffer[texture_vertex_index + 2] = x + w;
-  texture_buffer[texture_vertex_index + 3] = y;
-  texture_buffer[texture_vertex_index + 4] = x;
-  texture_buffer[texture_vertex_index + 5] = y + h;
-  texture_buffer[texture_vertex_index + 6] = x + w;
-  texture_buffer[texture_vertex_index + 7] = y + h;
-
-  // Update vertex buffer
-  vertex_buffer[texture_vertex_index + 0] = dst.x;
-  vertex_buffer[texture_vertex_index + 1] = dst.y;
-  vertex_buffer[texture_vertex_index + 2] = dst.x + dst.w;
-  vertex_buffer[texture_vertex_index + 3] = dst.y;
-  vertex_buffer[texture_vertex_index + 4] = dst.x;
-  vertex_buffer[texture_vertex_index + 5] = dst.y + dst.h;
-  vertex_buffer[texture_vertex_index + 6] = dst.x + dst.w;
-  vertex_buffer[texture_vertex_index + 7] = dst.y + dst.h;
-
-  // Update color buffer
-  memcpy(color_buffer + color_index +  0, &color, 4);
-  memcpy(color_buffer + color_index +  4, &color, 4);
-  memcpy(color_buffer + color_index +  8, &color, 4);
-  memcpy(color_buffer + color_index + 12, &color, 4);
-
-  // Update index buffer
-  index_buffer[index_index + 0] = element_index + 0;
-  index_buffer[index_index + 1] = element_index + 1;
-  index_buffer[index_index + 2] = element_index + 2;
-  index_buffer[index_index + 3] = element_index + 2;
-  index_buffer[index_index + 4] = element_index + 3;
-  index_buffer[index_index + 5] = element_index + 1;
 }
 
 void r_draw_rect(mu_Rect rect, mu_Color color) {
