@@ -71,9 +71,7 @@ out vec4 o_color;
 void main()
 {
   float alpha = texture(u_texture, texture_coordinates).r; 
-  //o_color = vec4(color.rgb, color.a * alpha);
-
-  o_color = texture(u_texture, texture_coordinates);
+  o_color = vec4(color.rgb, color.a * alpha);
 } 
 )";
 
@@ -115,12 +113,12 @@ void r_init(ANativeWindow* window) {
   
   glViewport(0, 0, width, height);
    
-  glGenVertexArrays(1, &vertex_array_object);
-  glBindVertexArray(vertex_array_object);
-
   glGenBuffers(1, &vertex_buffer_object);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), NULL, GL_DYNAMIC_DRAW);
+
+  glGenVertexArrays(1, &vertex_array_object);
+  glBindVertexArray(vertex_array_object);
 
   /* Position */
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
@@ -185,10 +183,7 @@ void r_init(ANativeWindow* window) {
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture);
-
+  
   assert(glGetError() == 0);
 }
 
@@ -207,9 +202,7 @@ static void flush(void) {
   GLint u_projection_location = glGetUniformLocation(shader_program, "u_projection");
   glUniformMatrix4fv(u_projection_location, 1, GL_FALSE, ortho_projection);
 
-  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture);
-  glUniform1i(glGetUniformLocation(shader_program, "u_texture"), 0);
   
   glBindVertexArray(vertex_array_object);
 
@@ -237,29 +230,33 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
 
   /* Top left */
   vertices[base_vertex + 0] = (Vertex){ .position = { dst.x, dst.y },
-										.texture_coordinates = { src.x / ATLAS_WIDTH,
-																 src.y / ATLAS_HEIGHT },
+										.texture_coordinates = { src.x / (float) ATLAS_WIDTH,
+																 src.y / (float) ATLAS_HEIGHT },
 										
 										.color = { color.r, color.g, color.b, color.a }};
 
   /* Top right */
   vertices[base_vertex + 1] = (Vertex){ .position = { dst.x + dst.w, dst.y },
-										.texture_coordinates = { (src.x + src.w) / ATLAS_WIDTH,
-																 src.y / ATLAS_HEIGHT },
+										.texture_coordinates = { (src.x + src.w) /
+																 (float) ATLAS_WIDTH,
+																 src.y / (float) ATLAS_HEIGHT },
 										
 										.color = { color.r, color.g, color.b, color.a }};
 
   /* Bottom left */
   vertices[base_vertex + 2] = (Vertex){ .position = { dst.x, dst.y + dst.h },
-										.texture_coordinates = { src.x / ATLAS_WIDTH,
-																 (src.y + src.h) / ATLAS_HEIGHT },
+										.texture_coordinates = { src.x / (float) ATLAS_WIDTH,
+																 (src.y + src.h) /
+																 (float) ATLAS_HEIGHT },
 										
 										.color = { color.r, color.g, color.b, color.a }};
 
   /* Bottom right */
   vertices[base_vertex + 3] = (Vertex){ .position = { dst.x + dst.w, dst.y + dst.h },
-										.texture_coordinates = { (src.x + src.w) / ATLAS_WIDTH,
-																 (src.y + src.h) / ATLAS_HEIGHT },
+										.texture_coordinates = { (src.x + src.w) /
+																 (float) ATLAS_WIDTH,
+																 (src.y + src.h) /
+																 (float) ATLAS_HEIGHT },
 										
 										.color = { color.r, color.g, color.b, color.a }};
 

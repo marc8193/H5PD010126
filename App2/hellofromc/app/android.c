@@ -10,7 +10,7 @@ static float bg[3] = { 18, 18, 18 };
 
 static void test_window(mu_Context *ctx) {
   /* do window */
-  if (mu_begin_window(ctx, "Demo Window", mu_rect(100, 100, 300, 450))) {
+  if (mu_begin_window(ctx, "Demo Window", mu_rect(100, 100, 600, 800))) {
     mu_Container *win = mu_get_current_container(ctx);
     win->rect.w = mu_max(win->rect.w, 240);
     win->rect.h = mu_max(win->rect.h, 300);
