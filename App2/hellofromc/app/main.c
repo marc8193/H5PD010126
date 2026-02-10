@@ -1,3 +1,4 @@
+#include <android/input.h>
 #include <android_native_app_glue.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +6,8 @@
 
 #include "renderer.h"
 #include "log.h"
+
+static mu_Context ctx;
 
 static float bg[3] = { 18, 18, 18 };
 
@@ -115,16 +118,45 @@ static int text_height(mu_Font font) {
   return r_get_text_height();
 }
 
+static int32_t handle_input(struct android_app* app, AInputEvent* event) {
+  if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
+	int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
+	int32_t x = (int32_t)AMotionEvent_getX(event, 0);
+	int32_t y = (int32_t)AMotionEvent_getY(event, 0);
+
+	printf("Motion X: %i, Y: %i\n", x, y);
+
+	switch (action) {
+	case AMOTION_EVENT_ACTION_DOWN:
+	case AMOTION_EVENT_ACTION_POINTER_DOWN:
+	  mu_input_mousedown(&ctx, x, y, MU_MOUSE_LEFT);
+	  break;
+	case AMOTION_EVENT_ACTION_UP:
+	case AMOTION_EVENT_ACTION_POINTER_UP:
+	  mu_input_mouseup(&ctx, x, y, MU_MOUSE_LEFT);
+	  break;
+	case AMOTION_EVENT_ACTION_MOVE:
+	  mu_input_mousemove(&ctx, x, y);
+	  break;
+	}
+	return 1;
+  }
+
+  return 0;
+}
+
 void android_main(struct android_app* app) {
   app->onAppCmd = NULL; // Simplest case
+  app->onInputEvent = handle_input;
+
+  struct android_poll_source* source;
+  int events;
+  int ident;
 
   // Wait until window is available
   while (!app->window) {
-    struct android_poll_source* source;
-    int events;
-
     // Poll once (timeout 0 ms)
-    int ident = ALooper_pollOnce(0, NULL, &events, (void**)&source);
+    ident = ALooper_pollOnce(0, NULL, &events, (void**)&source);
     if (ident >= 0 && source) {
       source->process(app, source);
     }
@@ -133,31 +165,27 @@ void android_main(struct android_app* app) {
   r_init(app->window);
  
   /* init microui */
-  mu_Context *ctx = malloc(sizeof(mu_Context));
-  mu_init(ctx);
-  ctx->text_width = text_width;
-  ctx->text_height = text_height;
+  mu_init(&ctx);
+  ctx.text_width = text_width;
+  ctx.text_height = text_height;
 
   /* main loop */
   for (;;) {
-	struct android_poll_source* source;
-    int events;
-
-    // Poll once per iteration (timeout 0 ms)
-    int ident = ALooper_pollOnce(0, NULL, &events, (void**)&source);
+    // Poll once (timeout 0 ms)
+    ident = ALooper_pollOnce(0, NULL, &events, (void**)&source);
     if (ident >= 0 && source) {
       source->process(app, source);
     }
 
     /* process frame */
-	mu_begin(ctx);
-	test_window(ctx);
-	mu_end(ctx);
+	mu_begin(&ctx);
+	test_window(&ctx);
+	mu_end(&ctx);
 
     /* render */
     r_clear(mu_color(bg[0], bg[1], bg[2], 255));
     mu_Command *cmd = NULL;
-    while (mu_next_command(ctx, &cmd)) {
+    while (mu_next_command(&ctx, &cmd)) {
       switch (cmd->type) {
       case MU_COMMAND_TEXT: r_draw_text(cmd->text.str, cmd->text.pos, cmd->text.color); break;
       case MU_COMMAND_RECT: r_draw_rect(cmd->rect.rect, cmd->rect.color); break;
