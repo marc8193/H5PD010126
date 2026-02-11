@@ -1,0 +1,95 @@
+ANDROID_VERSION = 28
+
+OS_NAME = linux-x86_64
+
+ANDROID_NDK = ~/Android/Sdk/ndk/29.0.14206865
+
+APP_NAME = note
+
+PROJECT_ROOT = /home/mhl/projects/school/h5/TvaerfagligtProjekt
+APP_ROOT = $(PROJECT_ROOT)/app
+BUILD_ROOT = $(PROJECT_ROOT)/build
+
+SOURCES = $(APP_ROOT)/main.c $(APP_ROOT)/renderer.c $(APP_ROOT)/lib/android_native_app_glue.c $(APP_ROOT)/lib/microui/src/microui.c
+
+CFLAGS = -Wall -ffunction-sections -fdata-sections -fvisibility=hidden -DANDROID -DAPPNAME=\"$(APP_NAME)\" \
+	   	 -I$(ANDROID_NDK)/sysroot/usr/include -I$(ANDROID_NDK)/sysroot/usr/include/android \
+		 -I$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/include \
+		 -I$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/include/android -fPIC \
+		 -I$(APP_ROOT)/lib/microui/src -I$(APP_ROOT) -I$(APP_ROOT)/lib -DANDROIDVERSION=$(ANDROID_VERSION)
+
+LDFLAGS = -Wl,--gc-sections -lm -lGLESv3 -lEGL -landroid -llog \
+		  -lOpenSLES -shared -uANativeActivity_onCreate
+
+CC_ARM64 = $(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/bin/aarch64-linux-android$(ANDROID_VERSION)-clang
+CFLAGS_ARM64 = -m64
+
+: $(SOURCES) |> $(CC_ARM64) $(CFLAGS) $(CFLAGS_ARM64) %f -o %o -L$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/lib/aarch64-linux-android/$(ANDROID_VERSION) $(LDFLAGS) |> $(BUILD_ROOT)/lib/arm64-v8a/lib$(APP_NAME).so
+
+CC_ARM32 = $(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/bin/armv7a-linux-androideabi$(ANDROID_VERSION)-clang
+CFLAGS_ARM32 = -mfloat-abi=softfp -m32
+
+: $(SOURCES) |> $(CC_ARM32) $(CFLAGS) $(CFLAGS_ARM32) %f -o %o -L$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/lib/arm-linux-androideabi/$(ANDROID_VERSION) $(LDFLAGS) |> $(BUILD_ROOT)/lib/armeabi-v7a/lib$(APP_NAME).so
+
+CC_X86= $(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/bin/i686-linux-android$(ANDROID_VERSION)-clang
+CFLAGS_X86 = -march=i686 -mssse3 -mfpmath=sse -m32
+
+: $(SOURCES) |> $(CC_X86) $(CFLAGS) $(CFLAGS_X86) %f -o %o -L$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/lib/i686-linux-android/$(ANDROID_VERSION) $(LDFLAGS) |> $(BUILD_ROOT)/lib/x86/lib$(APP_NAME).so
+
+CFLAGS_X86_64 = -march=x86-64 -msse4.2 -mpopcnt -m64
+CC_X86_64 = $(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/bin/x86_64-linux-android$(ANDROID_VERSION)-clang
+
+: $(SOURCES) |> $(CC_X86_64) $(CFLAGS) $(CFLAGS_X86_64) %f -o %o -L$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/lib/x86_64-linux-android/$(ANDROID_VERSION) $(LDFLAGS) |> $(BUILD_ROOT)/lib/x86_64/lib$(APP_NAME).so
+
+PACKAGE_NAME = io.github.marc8193.$(APP_NAME)
+ANDROID_TARGET = $(ANDROID_VERSION)
+LABEL = $(APP_NAME)
+
+: AndroidManifest.xml.template |> \
+    PACKAGENAME=$(PACKAGE_NAME) \
+    ANDROIDVERSION=28 \
+    ANDROIDTARGET=$(ANDROID_TARGET) \
+    APPNAME=$(APP_NAME) \
+    LABEL=$(LABEL) \
+    envsubst '$$ANDROIDTARGET $$ANDROIDVERSION $$APPNAME $$PACKAGENAME $$LABEL' \
+    < %f > %o |> \
+    $(BUILD_ROOT)/AndroidManifest.xml
+
+BUILD_TOOLS = /home/mhl/Android/Sdk/build-tools/36.1.0
+ANDROID_JAR = /home/mhl/Android/Sdk/platforms/android-$(ANDROID_VERSION)/android.jar
+
+: $(ANDROID_JAR) $(BUILD_ROOT)/AndroidManifest.xml $(APP_ROOT)/res $(APP_ROOT)/assets |> $(BUILD_TOOLS)/aapt package -f -F %o -I $(ANDROID_JAR) -M $(BUILD_ROOT)/AndroidManifest.xml -S $(APP_ROOT)/res -A $(APP_ROOT)/assets --target-sdk-version $(ANDROID_VERSION) -v |> $(BUILD_ROOT)/$(APP_NAME).apk.uncompressed
+
+: $(BUILD_ROOT)/$(APP_NAME).apk.uncompressed \
+  $(BUILD_ROOT)/lib/arm64-v8a/lib$(APP_NAME).so \
+  $(BUILD_ROOT)/lib/armeabi-v7a/lib$(APP_NAME).so \
+  $(BUILD_ROOT)/lib/x86/lib$(APP_NAME).so \
+  $(BUILD_ROOT)/lib/x86_64/lib$(APP_NAME).so |> \
+  unzip -o $(BUILD_ROOT)/$(APP_NAME).apk.uncompressed -d $(BUILD_ROOT)/$(APP_NAME).apk.files && \
+  cd $(BUILD_ROOT)/$(APP_NAME).apk.files && \
+  zip -D4r $(BUILD_ROOT)/$(APP_NAME).apk.compressed . && \
+  zip -D0r $(BUILD_ROOT)/$(APP_NAME).apk.compressed resources.arsc AndroidManifest.xml && \
+  cd $(BUILD_ROOT) && \
+  zip -D4r $(BUILD_ROOT)/$(APP_NAME).apk.compressed lib && \
+  cd $(PROJECT_ROOT) && \
+  rm -rf $(BUILD_ROOT)/$(APP_NAME).apk.files \
+  |> $(BUILD_ROOT)/$(APP_NAME).apk.compressed
+  
+: $(BUILD_ROOT)/$(APP_NAME).apk.compressed |> $(BUILD_TOOLS)/zipalign -v 4 %f %o |> $(BUILD_ROOT)/$(APP_NAME).apk.unsigned
+
+STORE_PASS = password
+ALIAS_NAME = standkey
+KEYSTORE_FILE = $(BUILD_ROOT)/my-release-key.keystore
+DNAME = "CN=example.com, OU=ID, O=Example, L=Doe, S=John, C=GB"
+
+: |> keytool -genkey -v -keystore $(KEYSTORE_FILE) -alias $(ALIAS_NAME) \
+    -keyalg RSA -keysize 2048 -validity 10000 \
+    -storepass $(STORE_PASS) -keypass $(STORE_PASS) \
+    -dname $(DNAME) |> $(KEYSTORE_FILE)
+
+: $(BUILD_ROOT)/$(APP_NAME).apk.unsigned $(KEYSTORE_FILE) |> \
+  cd $(BUILD_ROOT) && \
+  $(BUILD_TOOLS)/apksigner sign --key-pass pass:$(STORE_PASS) \
+  --ks-pass pass:$(STORE_PASS) --ks $(KEYSTORE_FILE) \
+  --out $(APP_NAME).apk $(BUILD_ROOT)/$(APP_NAME).apk.unsigned && \
+  cd - |> $(BUILD_ROOT)/$(APP_NAME).apk $(BUILD_ROOT)/$(APP_NAME).apk.idsig

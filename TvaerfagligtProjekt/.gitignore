@@ -1,0 +1,6 @@
+build/
+.tup/
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/procesrapport.pdf
