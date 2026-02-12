@@ -18,8 +18,8 @@ static EGLDisplay display;
 static EGLSurface surface;
 static EGLContext context;
 
-static int width;
-static int height;
+static int window_width;
+static int window_height;
 
 static GLuint vertex_array_object;
 static GLuint vertex_buffer_object;
@@ -28,10 +28,16 @@ static GLuint element_buffer_object;
 static GLuint shader_program;
 static GLuint texture;
 
+static GLint u_projection_location;
+static GLint u_texture_location;
+
 typedef struct {
   GLfloat position[2];
+  GLfloat size[2];
+  GLfloat center_coordinates[2];
   GLfloat texture_coordinates[2];
   GLubyte color[4];
+  GLubyte border_radius;
 } Vertex;
 
 static Vertex vertices[MAX_VERTICES];
@@ -42,42 +48,65 @@ static const char* vertex_shader_source = R"(#version 300 es
 precision mediump float;
 
 layout (location = 0) in vec2 a_position;
-layout (location = 1) in vec2 a_texture_coordinates;
-layout (location = 2) in vec4 a_color;
+layout (location = 1) in vec2 a_size;
+layout (location = 2) in vec2 a_center_coordinates;
+layout (location = 3) in vec2 a_texture_coordinates;
+layout (location = 4) in vec4 a_color;
+layout (location = 5) in float a_border_radius;
 
 uniform mat4 u_projection;
 
+out vec2 size;
+out vec2 center_coordinates;
 out vec2 texture_coordinates;
 out vec4 color;
+out float border_radius;
 
 void main()
 {
   gl_Position = u_projection * vec4(a_position, 0.0, 1.0);
+
+  size = a_size;
+  center_coordinates = a_center_coordinates;
   texture_coordinates = a_texture_coordinates;
   color = a_color;
+  border_radius = a_border_radius;
 }
 )";
 
 static const char* fragment_shader_source = R"(#version 300 es
 precision mediump float;
 
+in vec2 size;
+in vec2 center_coordinates;
 in vec2 texture_coordinates;
 in vec4 color;
-
+in float border_radius;
+											   
 uniform sampler2D u_texture;
-
+											   
 out vec4 o_color;
 
 void main()
 {
-  float alpha = texture(u_texture, texture_coordinates).r; 
-  o_color = vec4(color.rgb, color.a * alpha);
+  float relative_border_radius = border_radius * min(size.x, size.y);
+  float distance = length(max(abs(gl_FragCoord.xy - center_coordinates) -
+							  size / 2.0f + relative_border_radius, 0.0)) - relative_border_radius;
+
+  if (distance <= 0.0) {
+	float anti_aliasing = fwidth(distance);
+	float alpha = 1.0 - smoothstep(0.0, anti_aliasing, distance);
+	alpha *= texture(u_texture, texture_coordinates).r;
+	o_color = vec4(color.rgb, color.a * alpha);
+  } else {
+    o_color = vec4(0.0, 0.0, 0.0, 0.0);
+  }
 } 
 )";
 
-void r_init(ANativeWindow* window) {
-  width  = ANativeWindow_getWidth(window);
-  height = ANativeWindow_getHeight(window);
+void r_init(ANativeWindow* window, int width, int height) {
+  window_width  = width;
+  window_height = height;
   
   /* Init EGL */
   const EGLint attribs[] = {
@@ -121,18 +150,40 @@ void r_init(ANativeWindow* window) {
   glBindVertexArray(vertex_array_object);
 
   /* Position */
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+						(void*) offsetof(Vertex, position));
+  
   glEnableVertexAttribArray(0);
 
-  /* Texture Coordinates */
+  /* Size */
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-						(void*)offsetof(Vertex, texture_coordinates));
+						(void*) offsetof(Vertex, size));
   
   glEnableVertexAttribArray(1);
 
-  /* Color */
-  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+  /* Center Coordinates */
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+						(void*) offsetof(Vertex, center_coordinates));
+  
   glEnableVertexAttribArray(2);
+
+  /* Texture Coordinates */
+  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+						(void*) offsetof(Vertex, texture_coordinates));
+  
+  glEnableVertexAttribArray(3);
+
+  /* Color */
+  glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex),
+						(void*) offsetof(Vertex, color));
+
+  glEnableVertexAttribArray(4);
+
+  /* Border Radius */
+  glVertexAttribPointer(5, 1, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex),
+						(void*) offsetof(Vertex, border_radius));
+
+  glEnableVertexAttribArray(5);
 
   glGenBuffers(1, &element_buffer_object);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object);
@@ -176,6 +227,18 @@ void r_init(ANativeWindow* window) {
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 
+  u_projection_location = glGetUniformLocation(shader_program, "u_projection");
+  if (u_projection_location == -1) {
+	fprintf(stderr, "uniform \"u_projection\" not found\n");
+	assert(0);
+  }
+
+  u_texture_location = glGetUniformLocation(shader_program, "u_texture");
+  if (u_texture_location == -1) {
+	fprintf(stderr, "uniform \"u_texture\" not found\n");
+	assert(0);
+  }
+
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, ATLAS_WIDTH, ATLAS_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE,
@@ -193,16 +256,16 @@ static void flush(void) {
   glUseProgram(shader_program);
   
   float ortho_projection[16] = {
-	2.0f / width, 0,              0, 0,
-	0,           -2.0f / height,  0, 0,
-	0,            0,             -1, 0,
-   -1,            1,              0, 1
+	2.0f / window_width, 0,                    0, 0,
+	0,                  -2.0f / window_height, 0, 0,
+	0,                   0,                   -1, 0,
+   -1,                   1,                    0, 1
   };
 
-  GLint u_projection_location = glGetUniformLocation(shader_program, "u_projection");
   glUniformMatrix4fv(u_projection_location, 1, GL_FALSE, ortho_projection);
 
   glBindTexture(GL_TEXTURE_2D, texture);
+  glUniform1i(u_texture_location, 0);
   
   glBindVertexArray(vertex_array_object);
 
@@ -220,7 +283,7 @@ static void flush(void) {
   buffer_index = 0;
 }
 
-static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
+static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color, uint8_t border_radius) {
   if (buffer_index == MAX_QUADS) {
 	flush();
   }
@@ -230,36 +293,60 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
 
   /* Top left */
   vertices[base_vertex + 0] = (Vertex){ .position = { dst.x, dst.y },
+										.size = { dst.w, dst.h },
+										.center_coordinates = { dst.x + dst.w / 2.0f,
+																(window_height -
+																 (dst.y + dst.h / 2.0f))},
+																
 										.texture_coordinates = { src.x / (float) ATLAS_WIDTH,
 																 src.y / (float) ATLAS_HEIGHT },
-										
-										.color = { color.r, color.g, color.b, color.a }};
+
+										.color = { color.r, color.g, color.b, color.a },
+										.border_radius = border_radius };
 
   /* Top right */
   vertices[base_vertex + 1] = (Vertex){ .position = { dst.x + dst.w, dst.y },
+										.size = { dst.w, dst.h },
+										.center_coordinates = { dst.x + dst.w / 2.0f,
+																(window_height -
+																 (dst.y + dst.h / 2.0f))},
+
 										.texture_coordinates = { (src.x + src.w) /
 																 (float) ATLAS_WIDTH,
 																 src.y / (float) ATLAS_HEIGHT },
 										
-										.color = { color.r, color.g, color.b, color.a }};
+										.color = { color.r, color.g, color.b, color.a },
+										.border_radius = border_radius };
 
   /* Bottom left */
   vertices[base_vertex + 2] = (Vertex){ .position = { dst.x, dst.y + dst.h },
+										.size = { dst.w, dst.h },
+										.center_coordinates = { dst.x + dst.w / 2.0f,
+																(window_height -
+																 (dst.y + dst.h / 2.0f))},
+
 										.texture_coordinates = { src.x / (float) ATLAS_WIDTH,
 																 (src.y + src.h) /
 																 (float) ATLAS_HEIGHT },
 										
-										.color = { color.r, color.g, color.b, color.a }};
-
+										.color = { color.r, color.g, color.b, color.a },
+										.border_radius = border_radius };
+							
   /* Bottom right */
   vertices[base_vertex + 3] = (Vertex){ .position = { dst.x + dst.w, dst.y + dst.h },
+										.size = { dst.w, dst.h },
+										.center_coordinates = { dst.x + dst.w / 2.0f,
+																(window_height -
+																 (dst.y + dst.h / 2.0f))},
+
 										.texture_coordinates = { (src.x + src.w) /
 																 (float) ATLAS_WIDTH,
 																 (src.y + src.h) /
 																 (float) ATLAS_HEIGHT },
 										
-										.color = { color.r, color.g, color.b, color.a }};
-
+										.color = { color.r, color.g, color.b, color.a },
+										.border_radius = border_radius };
+								
   indices[base_index + 0] = base_vertex + 0;
   indices[base_index + 1] = base_vertex + 1;
   indices[base_index + 2] = base_vertex + 2;
@@ -271,7 +358,7 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
 }
 
 void r_draw_rect(mu_Rect rect, mu_Color color) {
-  push_quad(rect, atlas[ATLAS_WHITE], color);
+  push_quad(rect, atlas[ATLAS_WHITE], color, 96);
 }
 
 void r_draw_text(const char *text, mu_Vec2 pos, mu_Color color) {
@@ -282,7 +369,7 @@ void r_draw_text(const char *text, mu_Vec2 pos, mu_Color color) {
     mu_Rect src = atlas[ATLAS_FONT + chr];
     dst.w = src.w;
     dst.h = src.h;
-    push_quad(dst, src, color);
+    push_quad(dst, src, color, 0);
     dst.x += dst.w;
   }
 }
@@ -291,7 +378,7 @@ void r_draw_icon(int id, mu_Rect rect, mu_Color color) {
   mu_Rect src = atlas[id];
   int x = rect.x + (rect.w - src.w) / 2;
   int y = rect.y + (rect.h - src.h) / 2;
-  push_quad(mu_rect(x, y, src.w, src.h), src, color);
+  push_quad(mu_rect(x, y, src.w, src.h), src, color, 0);
 }
 
 int r_get_text_width(const char *text, int len) {
@@ -310,7 +397,7 @@ int r_get_text_height(void) {
 
 void r_set_clip_rect(mu_Rect rect) {
   flush();
-  glScissor(rect.x, height - (rect.y + rect.h), rect.w, rect.h);
+  glScissor(rect.x, window_height - (rect.y + rect.h), rect.w, rect.h);
 }
 
 void r_clear(mu_Color clr) {

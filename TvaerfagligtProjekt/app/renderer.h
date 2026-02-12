@@ -5,7 +5,7 @@
 
 #include "microui.h"
 
-void r_init(ANativeWindow* window);
+void r_init(ANativeWindow* window, int window_width, int window_height);
 void r_draw_rect(mu_Rect rect, mu_Color color);
 void r_draw_text(const char *text, mu_Vec2 pos, mu_Color color);
 void r_draw_icon(int id, mu_Rect rect, mu_Color color);

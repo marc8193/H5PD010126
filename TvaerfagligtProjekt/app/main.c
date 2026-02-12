@@ -9,103 +9,62 @@
 
 static mu_Context ctx;
 
-static float bg[3] = { 18, 18, 18 };
+static int window_width;
+static int window_height;
 
-static void test_window(mu_Context *ctx) {
+static int topbar_margin = 75;
+static mu_Color background_color = { .r = 18, .g = 18, .b = 18, .a = 255 };
+
+int mu_hotbar(mu_Context *ctx) {
+  char* name = "hotbar";
+  mu_Id id = mu_get_id(ctx, &name, sizeof(name));
+  mu_Rect base = mu_layout_next(ctx);
+  int result = 0;
+
+  mu_draw_control_frame(ctx, id, base, MU_COLOR_BASE, 0);
+
+  int margin = 10;
+  int button_width = (base.w / 3) - margin - (margin / 3);
+
+  for (int i = 0; i < 3; i++) {
+	char button_name[256] = {0};
+	sprintf(button_name, "Button %i", i);
+	mu_Id id = mu_get_id(ctx, button_name, sizeof(button_name));	
+	mu_Rect button = mu_rect((base.x + margin) + (button_width + margin) * i, base.y + margin,
+							 button_width, base.h - (margin * 2));
+
+	mu_update_control(ctx, id, button, 0);
+	if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id) {
+	  result |= MU_RES_SUBMIT + i;
+	}
+
+	mu_draw_control_frame(ctx, id, button, MU_COLOR_BUTTON, 0);
+	mu_draw_control_text(ctx, button_name, button, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
+  };
+
+  return result;
+}
+
+static void home_window() {
   /* do window */
-  if (mu_begin_window(ctx, "Demo Window", mu_rect(100, 100, 600, 800))) {
-    mu_Container *win = mu_get_current_container(ctx);
-    win->rect.w = mu_max(win->rect.w, 240);
-    win->rect.h = mu_max(win->rect.h, 300);
+  if (mu_begin_window_ex(&ctx, "home",
+						 mu_rect(0, topbar_margin, window_width, window_height - topbar_margin),
+						 MU_OPT_NORESIZE | MU_OPT_NOTITLE)) {
 
-    /* window info */
-    if (mu_header(ctx, "Window Info")) {
-      mu_Container *win = mu_get_current_container(ctx);
-      char buf[64];
-      mu_layout_row(ctx, 2, (int[]) { 54, -1 }, 0);
-      mu_label(ctx,"Position:");
-      sprintf(buf, "%d, %d", win->rect.x, win->rect.y); mu_label(ctx, buf);
-      mu_label(ctx, "Size:");
-      sprintf(buf, "%d, %d", win->rect.w, win->rect.h); mu_label(ctx, buf);
-    }
+	int rect_width = 480;
+	int rect_height = 160;
+	mu_Rect rect = mu_rect((window_width - rect_width) / 2, (window_height - rect_height) - 200,
+						   rect_width, rect_height);
+	
+	mu_layout_set_next(&ctx, rect, 0);
 
-    /* labels + buttons */
-    if (mu_header_ex(ctx, "Test Buttons", MU_OPT_EXPANDED)) {
-      mu_layout_row(ctx, 3, (int[]) { 86, -110, -1 }, 0);
-      mu_label(ctx, "Test buttons 1:");
-      if (mu_button(ctx, "Button 1")) { LOGI("MICROUI", "Pressed button 1"); }
-      if (mu_button(ctx, "Button 2")) { LOGI("MICROUI", "Pressed button 2"); }
-      mu_label(ctx, "Test buttons 2:");
-      if (mu_button(ctx, "Button 3")) { LOGI("MICROUI", "Pressed button 3"); }
-      if (mu_button(ctx, "Popup")) { mu_open_popup(ctx, "Test Popup"); }
-      if (mu_begin_popup(ctx, "Test Popup")) {
-        mu_button(ctx, "Hello");
-        mu_button(ctx, "World");
-        mu_end_popup(ctx);
-      }
-    }
-
-    /* tree */
-    if (mu_header_ex(ctx, "Tree and Text", MU_OPT_EXPANDED)) {
-      mu_layout_row(ctx, 2, (int[]) { 140, -1 }, 0);
-      mu_layout_begin_column(ctx);
-      if (mu_begin_treenode(ctx, "Test 1")) {
-        if (mu_begin_treenode(ctx, "Test 1a")) {
-          mu_label(ctx, "Hello");
-          mu_label(ctx, "world");
-          mu_end_treenode(ctx);
-        }
-        if (mu_begin_treenode(ctx, "Test 1b")) {
-          if (mu_button(ctx, "Button 1")) { LOGI("MICROUI", "Pressed button 1"); }
-          if (mu_button(ctx, "Button 2")) { LOGI("MICROUI", "Pressed button 2"); }
-          mu_end_treenode(ctx);
-        }
-        mu_end_treenode(ctx);
-      }
-      if (mu_begin_treenode(ctx, "Test 2")) {
-        mu_layout_row(ctx, 2, (int[]) { 54, 54 }, 0);
-        if (mu_button(ctx, "Button 3")) { LOGI("MICROUI", "Pressed button 3"); }
-        if (mu_button(ctx, "Button 4")) { LOGI("MICROUI", "Pressed button 4"); }
-        if (mu_button(ctx, "Button 5")) { LOGI("MICROUI", "Pressed button 5"); }
-        if (mu_button(ctx, "Button 6")) { LOGI("MICROUI", "Pressed button 6"); }
-        mu_end_treenode(ctx);
-      }
-      if (mu_begin_treenode(ctx, "Test 3")) {
-        static int checks[3] = { 1, 0, 1 };
-        mu_checkbox(ctx, "Checkbox 1", &checks[0]);
-        mu_checkbox(ctx, "Checkbox 2", &checks[1]);
-        mu_checkbox(ctx, "Checkbox 3", &checks[2]);
-        mu_end_treenode(ctx);
-      }
-      mu_layout_end_column(ctx);
-
-      mu_layout_begin_column(ctx);
-      mu_layout_row(ctx, 1, (int[]) { -1 }, 0);
-      mu_text(ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing "
-        "elit. Maecenas lacinia, sem eu lacinia molestie, mi risus faucibus "
-        "ipsum, eu varius magna felis a nulla.");
-      mu_layout_end_column(ctx);
-    }
-
-    /* background color sliders */
-    if (mu_header_ex(ctx, "Background Color", MU_OPT_EXPANDED)) {
-      mu_layout_row(ctx, 2, (int[]) { -78, -1 }, 74);
-      /* sliders */
-      mu_layout_begin_column(ctx);
-      mu_layout_row(ctx, 2, (int[]) { 46, -1 }, 0);
-      mu_label(ctx, "Red:");   mu_slider(ctx, &bg[0], 0, 255);
-      mu_label(ctx, "Green:"); mu_slider(ctx, &bg[1], 0, 255);
-      mu_label(ctx, "Blue:");  mu_slider(ctx, &bg[2], 0, 255);
-      mu_layout_end_column(ctx);
-      /* color preview */
-      mu_Rect r = mu_layout_next(ctx);
-      mu_draw_rect(ctx, r, mu_color(bg[0], bg[1], bg[2], 255));
-      char buf[32];
-      sprintf(buf, "#%02X%02X%02X", (int) bg[0], (int) bg[1], (int) bg[2]);
-      mu_draw_control_text(ctx, buf, r, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
-    }
-
-    mu_end_window(ctx);
+	switch (mu_hotbar(&ctx)) {
+	case MU_RES_SUBMIT + 0: printf("Clicked button 1\n"); break;
+	case MU_RES_SUBMIT + 1: printf("Clicked button 2\n"); break;
+	case MU_RES_SUBMIT + 2: printf("Clicked button 3\n"); break;
+	}
+	
+    mu_end_window(&ctx);
   }
 }
 
@@ -123,8 +82,6 @@ static int32_t handle_input(struct android_app* app, AInputEvent* event) {
 	int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
 	int32_t x = (int32_t)AMotionEvent_getX(event, 0);
 	int32_t y = (int32_t)AMotionEvent_getY(event, 0);
-
-	printf("Motion X: %i, Y: %i\n", x, y);
 
 	switch (action) {
 	case AMOTION_EVENT_ACTION_DOWN:
@@ -161,14 +118,21 @@ void android_main(struct android_app* app) {
       source->process(app, source);
     }
   }
- 
-  r_init(app->window);
+
+  window_width  = ANativeWindow_getWidth(app->window);
+  window_height = ANativeWindow_getHeight(app->window);
+  
+  r_init(app->window, window_width, window_height);
  
   /* init microui */
   mu_init(&ctx);
   ctx.text_width = text_width;
   ctx.text_height = text_height;
+  ctx.style->colors[MU_COLOR_WINDOWBG] = background_color;
+  ctx.style->colors[MU_COLOR_BASE] = mu_color(38, 38, 38, 255);
 
+  ctx.style->size = mu_vec2(128, 64);
+  
   /* main loop */
   for (;;) {
     // Poll once (timeout 0 ms)
@@ -179,11 +143,11 @@ void android_main(struct android_app* app) {
 
     /* process frame */
 	mu_begin(&ctx);
-	test_window(&ctx);
+	home_window();
 	mu_end(&ctx);
 
     /* render */
-    r_clear(mu_color(bg[0], bg[1], bg[2], 255));
+    r_clear(background_color);
     mu_Command *cmd = NULL;
     while (mu_next_command(&ctx, &cmd)) {
       switch (cmd->type) {
