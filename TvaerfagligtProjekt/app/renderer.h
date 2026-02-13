@@ -2,8 +2,7 @@
 #define RENDERER_H
 
 #include <android/native_activity.h>
-
-#include "microui.h"
+#include <ui.h>
 
 void r_init(ANativeWindow* window, int window_width, int window_height);
 void r_draw_rect(mu_Rect rect, mu_Color color);

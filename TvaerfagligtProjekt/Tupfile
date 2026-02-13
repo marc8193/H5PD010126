@@ -10,13 +10,13 @@ PROJECT_ROOT = /home/mhl/projects/school/h5/TvaerfagligtProjekt
 APP_ROOT = $(PROJECT_ROOT)/app
 BUILD_ROOT = $(PROJECT_ROOT)/build
 
-SOURCES = $(APP_ROOT)/main.c $(APP_ROOT)/renderer.c $(APP_ROOT)/lib/android_native_app_glue.c $(APP_ROOT)/lib/microui/src/microui.c
+SOURCES = $(APP_ROOT)/*.c
 
 CFLAGS = -Wall -ffunction-sections -fdata-sections -fvisibility=hidden -DANDROID -DAPPNAME=\"$(APP_NAME)\" \
 	   	 -I$(ANDROID_NDK)/sysroot/usr/include -I$(ANDROID_NDK)/sysroot/usr/include/android \
 		 -I$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/include \
 		 -I$(ANDROID_NDK)/toolchains/llvm/prebuilt/$(OS_NAME)/sysroot/usr/include/android -fPIC \
-		 -I$(APP_ROOT)/lib/microui/src -I$(APP_ROOT) -I$(APP_ROOT)/lib -DANDROIDVERSION=$(ANDROID_VERSION)
+		 -I$(APP_ROOT) -DANDROIDVERSION=$(ANDROID_VERSION)
 
 LDFLAGS = -Wl,--gc-sections -lm -lGLESv3 -lEGL -landroid -llog \
 		  -lOpenSLES -shared -uANativeActivity_onCreate

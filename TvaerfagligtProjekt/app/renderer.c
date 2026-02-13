@@ -1,14 +1,14 @@
-#include <android_native_app_glue.h>
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "renderer.h"
-#include "atlas.inl"
-#include "log.h"
+#include <android_native_app_glue.h>
+#include <renderer.h>
+
+#include <atlas.inl>
 
 #define MAX_VERTICES 4096
 #define MAX_QUADS (MAX_VERTICES / 4)
@@ -358,7 +358,7 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color, uint8_t border_r
 }
 
 void r_draw_rect(mu_Rect rect, mu_Color color) {
-  push_quad(rect, atlas[ATLAS_WHITE], color, 96);
+  push_quad(rect, atlas[ATLAS_WHITE], color, 64);
 }
 
 void r_draw_text(const char *text, mu_Vec2 pos, mu_Color color) {

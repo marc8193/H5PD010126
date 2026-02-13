@@ -1,6 +1,3 @@
 [submodule "App2/hellofromc/app/lib/microui"]
 	path = App2/hellofromc/app/lib/microui
 	url = https://github.com/rxi/microui.git
-[submodule "TvaerfagligtProjekt/app/lib/microui"]
-	path = TvaerfagligtProjekt/app/lib/microui
-	url = https://github.com/rxi/microui.git
