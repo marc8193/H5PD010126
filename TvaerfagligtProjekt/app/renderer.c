@@ -357,8 +357,8 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color, uint8_t border_r
   buffer_index++;
 }
 
-void r_draw_rect(mu_Rect rect, mu_Color color) {
-  push_quad(rect, atlas[ATLAS_WHITE], color, 64);
+void r_draw_rect(mu_Rect rect, mu_Color color, uint8_t border_radius) {
+  push_quad(rect, atlas[ATLAS_WHITE], color, border_radius);
 }
 
 void r_draw_text(const char *text, mu_Vec2 pos, mu_Color color) {

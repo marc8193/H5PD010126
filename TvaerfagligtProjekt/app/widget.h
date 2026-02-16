@@ -5,17 +5,17 @@
 #include <allocator.h>
 
 typedef enum {
-  UI_HOME_HOTBAR_HOME_BUTTON,
-  UI_HOME_HOTBAR_NEW_BUTTON,
-  UI_HOME_HOTBAR_SYNC_BUTTON,
-  UI_WIDGETS_MAX
-} Widget_ID;
+  UI_HOME_WINDOW,
+  UI_EDIT_WINDOW,
+  UI_SYNC_WINDOW,
+} UI_Window;
 
 typedef struct {
-  Widget_ID widget;
+  mu_Id widget;
   uint8_t clicked;
 } UI_Action;
 
-UI_Action* ui_home(mu_Context* ctx, Arena* arena, mu_Vec2 size, int top_margin);
+void ui_home(mu_Context* ctx, Stack* ui_page_stack, mu_Vec2 size, int top_margin);
+void ui_edit(mu_Context* ctx, Stack* ui_page_stack, mu_Vec2 size, int top_margin);
 
 #endif

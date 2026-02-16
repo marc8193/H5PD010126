@@ -210,6 +210,8 @@ struct mu_Context {
   int key_down;
   int key_pressed;
   char input_text[32];
+  /* extra */
+  void* user_data;
 };
 
 
