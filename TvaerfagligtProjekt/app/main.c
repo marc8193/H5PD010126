@@ -1,9 +1,11 @@
+#include <android/input.h>
+#include <assert.h>
+#include <jni.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <android/input.h>
 #include <android_native_app_glue.h>
-#include <jni.h>
+#include <logic.h>
 #include <renderer.h>
 #include <ui.h>
 #include <widget.h>
@@ -370,14 +372,23 @@ void android_main(struct android_app* app) {
   ctx->style->colors[MU_COLOR_BASE] = mu_color(38, 38, 38, 255);
 
   Stack ui_page_stack = {0};
-  unsigned char buffer[256] = {0};
+  unsigned char ui_page_buffer[256] = {0};
   
-  stack_init(&ui_page_stack, buffer, 256);
+  stack_init(&ui_page_stack, ui_page_buffer, sizeof(ui_page_buffer));
   ctx->user_data = &ui_page_stack;
 
   UI_Window* initial_window = (UI_Window*) stack_allocate(&ui_page_stack, sizeof(UI_Window));
 
   *initial_window = UI_HOME_WINDOW;
+
+  Arena notes_arena = {0};
+  unsigned char notes_buffer[256 * 10] = {0};
+  
+  arena_init(&notes_arena, notes_buffer, sizeof(notes_buffer));
+
+  Note* head_note = NULL;
+  Note* tail_note = NULL;
+  Note* selected_note = NULL;
    
   /* main loop */
   for (;;) {
@@ -387,7 +398,6 @@ void android_main(struct android_app* app) {
       source->process(app, source);
     }
 
-
 	UI_Window* current_window = (UI_Window*) ((uintptr_t) ui_page_stack.buffer +
 											  (uintptr_t) ui_page_stack.offset - sizeof(UI_Window));
 	
@@ -396,15 +406,45 @@ void android_main(struct android_app* app) {
 	
 	switch (*current_window) {
 	case UI_HOME_WINDOW:
-	  ui_home(ctx, &ui_page_stack, mu_vec2(window_width, window_height), 75);
+	  ui_home(ctx, &ui_page_stack, mu_vec2(window_width, window_height), 75, head_note);
 	  break;
 
 	case UI_EDIT_WINDOW:
-	  ui_edit(ctx, &ui_page_stack, mu_vec2(window_width, window_height), 75);
+	  assert(selected_note);
+	  
+	  ui_edit(ctx, app, &ui_page_stack, mu_vec2(window_width, window_height), 75,
+			  selected_note->buffer, sizeof(selected_note->buffer));
+	  
+	  break;
+
+	case UI_NEW_EDIT_WINDOW:
+	  Note* note = (Note*) arena_allocate(&notes_arena, sizeof(Note));
+
+	  note_init(note);
+
+	  if (!head_note) {
+		head_note = note;
+		tail_note = note;
+	  } else {
+		tail_note->next = note;
+		note->previous = tail_note;
+		tail_note = note;
+	  }
+
+	  selected_note = note;
+
+	  ui_edit(ctx, app, &ui_page_stack, mu_vec2(window_width, window_height), 75, note->buffer,
+			  sizeof(note->buffer));
+
+	  stack_free(&ui_page_stack, current_window);
+	  
+	  UI_Window* window = (UI_Window*) stack_allocate(&ui_page_stack, sizeof(UI_Window));
+	  *window = UI_EDIT_WINDOW;
+
 	  break;
 
 	case UI_SYNC_WINDOW:
-	  printf("Sync page is active\n");
+	  printf("Todo: implement sync page\n");
 	  break;
 	}
 	  
