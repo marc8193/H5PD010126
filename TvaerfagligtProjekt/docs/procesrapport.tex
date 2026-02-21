@@ -1,7 +1,10 @@
 \documentclass{article}
 \usepackage{parskip}
 \usepackage{graphicx}
+\usepackage[backend=biber, style=alphabetic]{biblatex}
 \usepackage{hyperref} % must be last import
+
+\addbibresource{procesrapport.bib}
 
 \newcommand{\projectname}{Decentraliseret dataudveksling i notesapplikation}
 \newcommand{\student}{Marcus Haukelid Larsen}
@@ -36,7 +39,7 @@
   {\large \textbf{Uddannelsessted:} Techcollege, Struervej 70, 9220 Aalborg Øst, Denmark}
   \vspace*{\fill}
 
-  {\large \textbf{Elevplads:} RTX A/S , Strømmen 6, 9400 Nørresundby, Denmark}
+  {\large \textbf{Elevplads:} RTX A/S, Strømmen 6, 9400 Nørresundby, Denmark}
   \vspace*{\fill}
 
   {\large \textbf{Projektperiode:} 05/02-2026 - 17/03-2026}
@@ -121,6 +124,22 @@ centrale platforme uden at gå på kompromis med tilgængelighed og
 brugervenlighed?
 
 \section{Projektplanlægning}
+Planlægningen blev udarbejdet med udgangspunkt i de forskellige grænseflader, 
+som systemet skulle understøtte. Dette omfattede både den grafiske 
+brugergrænseflade, som gør det muligt for brugere at interagere med produktet, 
+og grænsefladen til decentraliseret dataudveksling mellem enheder.
+
+Rapporten blev skrevet sideløbende med udviklingen af produktet, således at
+beskrivelserne af implementeringen kunne dokumentere de faktiske løsninger, 
+valgte teknologier og erfaringer undervejs. Denne tilgang gjorde det muligt 
+løbende at reflektere over om rapporten nøjagtigt afspejlede projektets
+fremdrift og beslutninger.
+
+Nedenstående tidsplan viser alle dage fra projektstart til aflevering.
+Tidsplanen er opdelt i perioder, da projektforløbet har været fragmenteret.
+Den indeholder kun implementeringsaktiviteter, da rapporten blev udarbejdet
+sideløbende med udviklingen.
+
 \begin{figure}[h]
   \centering
   \includegraphics[width=1\textwidth]{tidsplan.png}
@@ -128,12 +147,69 @@ brugervenlighed?
 \end{figure}
 
 \section{Metodologi}
+Dette afsnit beskriver de enkelte delelementer af systemet og de udfordringer, 
+der opstod under implementeringsprocessen. Formålet er at give et klart overblik 
+over, hvordan systemet blev udviklet, hvilke teknologier der blev anvendt, og 
+hvordan forskellige funktionelle dele blev integreret.
+
 \subsection{Brugergrænseflade}
+Layoutsystemet MicroUI blev benyttet, da det bygger på renderingsfilosofien
+immediate-mode. Dette gør det nemt at tegne, da alle grafiske elementer
+gentegnes på hver frame, uden at det er nødvendigt at vedligeholde komplekse
+graftræer af grafiske elementer. 
+
+Der har været tvivl om, hvorvidt immediate-mode layoutsystemer kræver 
+betydeligt mere strøm end traditionelle retained-mode layoutsystemer. Målinger 
+viser dog, at dette ikke er tilfældet: under typiske forhold er energiforbruget 
+for immediate-mode layoutsystemer sammenligneligt med, eller lavere end,
+retained-mode layoutsystemer~\cite{smith2024_proving}. 
+Dette indikerer, at frygten for øget strømforbrug ikke bør være en hindring
+for at vælge immediate-mode layoutsystemer, og at valget i stedet kan baseres på
+udviklingsmæssige og arkitektoniske fordele, såsom enkel genopbygning af den
+grafiske flade og mindre kompleksitet.
+
+Det ovenstående system fokuserer udelukkende på layoutet,
+mens hele renderingsprocessen er håndskrevet i OpenGL ES 3.0 for at sikre optimal ydeevne.
+Grafikrendering opnås ved hjælp af skræddersyet shader-kode,
+der effektivt kan tegne rektangler. Disse rektangler udgør en fundamental byggesten i de
+fleste grafiske brugergrænseflader (se \texttt{source/renderer.c}).
+
 \subsection{Databehandling}
+
+Der benyttes en skræddersyet hukommelsesallokator, da den standard hukommelsesallokator,
+malloc/free, fungerer som et synkront håndtag, der hurtigt kan føre til komplekse allokeringsmønstre og
+dermed betragtes som usikker. I stedet anvendes en kombination af arena- og stack-allokatorer.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\textwidth]{arena-allokering.png}
+  \caption{Arena allokering}
+  \label{fig:arena-allocate}
+  \centering
+\end{figure}
+
+Arena-allokatoren muliggør effektiv håndtering af noter i hukommelsen,
+da allokeringen sker i en lineær buffer. Dette skaber en overskuelig mental model over den allokerede hukommelse og
+gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se \ref{fig:arena-allocate}).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\textwidth]{stack-allokering.png}
+  \caption{Stack allokering}
+  \label{fig:stack-allocate}
+  \centering
+\end{figure}
+
+Stack-allokatoren muliggør hurtig navigation frem og tilbage i brugergrænsefladen, idet den bygger på
+Last In, First Out (LIFO)-princippet. Denne tilgang minimerer risikoen for hukommelsesfejl og skaber samtidig en
+overskuelig mental model over den allokerede hukommelse (se \ref{fig:stack-allocate}).
+
 \subsection{Datalagring}
 
 \section{Begrænsninger}
 
 \section{Konklusion}
+
+\printbibliography[title={Referencer}]
 
 \end{document}
