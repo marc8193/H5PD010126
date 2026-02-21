@@ -2,6 +2,7 @@
 \usepackage{parskip}
 \usepackage{graphicx}
 \usepackage[backend=biber, style=alphabetic]{biblatex}
+\usepackage{listings}
 \usepackage{hyperref} % must be last import
 
 \addbibresource{procesrapport.bib}
@@ -172,13 +173,78 @@ Det ovenstående system fokuserer udelukkende på layoutet,
 mens hele renderingsprocessen er håndskrevet i OpenGL ES 3.0 for at sikre optimal ydeevne.
 Grafikrendering opnås ved hjælp af skræddersyet shader-kode,
 der effektivt kan tegne rektangler. Disse rektangler udgør en fundamental byggesten i de
-fleste grafiske brugergrænseflader (se \texttt{source/renderer.c}).
+fleste grafiske brugergrænseflader (se \ref{lst:renderer}).
+
+\begin{lstlisting}[language=C, caption=Vertex og Fragment shader, label=lst:renderer]
+  static const char* vertex_shader_source = R"(#version 300 es
+  precision mediump float;
+
+  layout (location = 0) in vec2 a_position;
+  layout (location = 1) in vec2 a_size;
+  layout (location = 2) in vec2 a_center_coordinates;
+  layout (location = 3) in vec2 a_texture_coordinates;
+  layout (location = 4) in vec4 a_color;
+  layout (location = 5) in float a_border_radius;
+
+  uniform mat4 u_projection;
+
+  out vec2 size;
+  out vec2 center_coordinates;
+  out vec2 texture_coordinates;
+  out vec4 color;
+  out float border_radius;
+
+  void main()
+  {
+    gl_Position = u_projection * vec4(a_position, 0.0, 1.0);
+
+    size = a_size;
+    center_coordinates = a_center_coordinates;
+    texture_coordinates = a_texture_coordinates;
+    color = a_color;
+    border_radius = a_border_radius;
+  }
+  )";
+
+  static const char* fragment_shader_source = R"(#version 300 es
+  precision mediump float;
+
+  in vec2 size;
+  in vec2 center_coordinates;
+  in vec2 texture_coordinates;
+  in vec4 color;
+  in float border_radius;
+  
+  uniform sampler2D u_texture;
+  
+  out vec4 o_color;
+
+  void main()
+  {
+    float relative_border_radius = border_radius * min(size.x, size.y);
+    float distance = length(max(abs(gl_FragCoord.xy - center_coordinates) -
+    size / 2.0f + relative_border_radius, 0.0)) - relative_border_radius;
+
+    if (distance <= 0.0) {
+      float anti_aliasing = fwidth(distance);
+      float alpha = 1.0 - smoothstep(0.0, anti_aliasing, distance);
+      alpha *= texture(u_texture, texture_coordinates).r;
+      o_color = vec4(color.rgb, color.a * alpha);
+    } else {
+      o_color = vec4(0.0, 0.0, 0.0, 0.0);
+    }
+  } 
+  )"; 
+\end{lstlisting}
 
 \subsection{Databehandling}
-
 Der benyttes en skræddersyet hukommelsesallokator, da den standard hukommelsesallokator,
 malloc/free, fungerer som et synkront håndtag, der hurtigt kan føre til komplekse allokeringsmønstre og
 dermed betragtes som usikker. I stedet anvendes en kombination af arena- og stack-allokatorer.
+
+Arena-allokatoren muliggør effektiv håndtering af noter i hukommelsen,
+da allokeringen sker i en lineær buffer. Dette skaber en overskuelig mental model over den allokerede hukommelse og
+gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se \ref{fig:arena-allocate}).
 
 \begin{figure}[h]
   \centering
@@ -188,9 +254,9 @@ dermed betragtes som usikker. I stedet anvendes en kombination af arena- og stac
   \centering
 \end{figure}
 
-Arena-allokatoren muliggør effektiv håndtering af noter i hukommelsen,
-da allokeringen sker i en lineær buffer. Dette skaber en overskuelig mental model over den allokerede hukommelse og
-gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se \ref{fig:arena-allocate}).
+Stack-allokatoren muliggør hurtig navigation frem og tilbage i brugergrænsefladen, idet den bygger på
+Last In, First Out (LIFO)-princippet. Denne tilgang minimerer risikoen for hukommelsesfejl og skaber samtidig en
+overskuelig mental model over den allokerede hukommelse (se \ref{fig:stack-allocate}).
 
 \begin{figure}[h]
   \centering
@@ -200,13 +266,26 @@ gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se 
   \centering
 \end{figure}
 
-Stack-allokatoren muliggør hurtig navigation frem og tilbage i brugergrænsefladen, idet den bygger på
-Last In, First Out (LIFO)-princippet. Denne tilgang minimerer risikoen for hukommelsesfejl og skaber samtidig en
-overskuelig mental model over den allokerede hukommelse (se \ref{fig:stack-allocate}).
-
 \subsection{Datalagring}
+Der benyttes en relationel database, mere specifikt en SQL database som datalagrings løsning.
+Formålet med at anvende en relationel database er at skabe meningsfulde relationer mellem de
+decentrale enheder og noterne. Ved at organisere data i tabeller kan vi effektivt håndtere og
+forespørge de forbindelser, der eksisterer mellem forskellige enheder og deres tilknyttede noter.
+SQL giver desuden mulighed for at køre komplekse forespørgsler, hvilket gør det lettere at opdatere,
+søge og analysere informationen. Denne struktur bidrager til et mere strømlinet og effektivt system,
+som kan skalere, efterhånden som der tilføjes flere enheder og noter (se \ref{fig:er-diagram}).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\textwidth]{er-diagram.png}
+  \caption{ER-diagram}
+  \label{fig:er-diagram}
+  \centering
+\end{figure}
 
 \section{Begrænsninger}
+
+\section{Realiseret tidsplan}
 
 \section{Konklusion}
 
