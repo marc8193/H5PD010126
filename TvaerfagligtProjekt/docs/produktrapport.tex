@@ -1,0 +1,271 @@
+\documentclass{article}
+\usepackage[backend=biber, style=numeric]{biblatex}
+\usepackage{hyperref} % must be last import
+
+\addbibresource{produktrapport.bib}
+
+\newcommand{\projectname}{Decentraliseret dataudveksling i notesapplikation}
+\newcommand{\student}{Marcus Haukelid Larsen}
+\newcommand{\supervisor}{?}
+
+\begin{document}
+
+\pdfbookmark[1]{Forside}{frontpage}
+
+\begin{center}
+  {\Huge \textbf{\projectname}}
+
+  \vspace*{\fill}
+
+  {\Large \textbf{\student}}
+
+  \vspace*{\fill}
+
+  {\large \textbf{Produktrapport}}
+\end{center}
+
+\thispagestyle{empty}
+
+\newpage
+\begin{center}  
+  {\large \textbf{Elev:} \student}
+  \vspace*{\fill}
+
+  {\large \textbf{Projektnavn:} \projectname}
+  \vspace*{\fill}
+
+  {\large \textbf{Uddannelsessted:} Techcollege, Struervej 70, 9220 Aalborg Øst, Denmark}
+  \vspace*{\fill}
+
+  {\large \textbf{Elevplads:} RTX A/S, Strømmen 6, 9400 Nørresundby, Denmark}
+  \vspace*{\fill}
+
+  {\large \textbf{Projektperiode:} 05/02-2026 - 17/03-2026}
+  \vspace*{\fill}
+
+  {\large \textbf{Afleveringsdato:} 17/03-2026}
+  \vspace*{\fill}
+
+  {\large \textbf{Fremlæggelsesdato:} 20 el. 23/03-2026}
+  \vspace*{\fill}
+
+  {\large \textbf{Vejleder:} \supervisor}
+  \vspace*{\fill}
+
+  {\large \textbf{Underskrift:}}
+  \vspace*{\fill}
+  
+  \begin{tabular}{p{6cm} p{6cm}}
+    \hrulefill & \hrulefill \\
+    Vejleder (\supervisor) & Elev (\student)
+  \end{tabular}
+\end{center}
+
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+
+\newpage
+
+\section{Læsevejledning}
+Denne rapport er struktureret, så læseren først får en introduktion til
+projektets kontekst. I indledningen præsenteres baggrunden for casen
+og de centrale spørgsmål, som rapporten søger at besvare.
+
+Efter indledningen følger en beskrivelse af kravspecifikationen, hvor
+funktionalitet og acceptkriterier præsenteres. Afsnittet
+Anvendte teknologier beskriver de teknologier, projektet benytter,
+og er opdelt i tre underafsnit: MicroUI, OpenGL ES 3.0 og Tup.
+
+Rapporten afsluttes med en oversigt over projektets overordnede arkitektur
+samt en beskrivelse til opsætning af projektet.
+
+\section{Indledning}
+Vi lever i en digitaliseret verden, hvor ejerskab i stigende grad erstattes af
+midlertidig adgang.
+
+Som følge af magtkoncentration er der opstået flere organiserede bevægelser, der
+fremhæver decentraliseret digital infrastruktur som et muligt alternativ.
+
+Decentralisering rejser nye politiske spørgsmål om ansvar, regulering og ulighed.
+Fraværet af centrale aktører kan vanskeliggøre både kontrol og retlig beskyttelse.
+
+Rapporten beskriver, hvordan produktet er udarbejdet, hvilke delelementer det
+indebærer, og hvilke begrænsninger der er identificeret undervejs.
+
+\section{Casebeskrivelse}
+Vi lever i en digitaliseret verden, hvor ejerskab i stigende grad
+erstattes af midlertidig adgang. Denne udvikling rejser politiske
+spørgsmål om magt, rettigheder og afhængighed i relationen mellem
+borgere, stater og globale tech-giganter. Når data fungerer som den
+centrale valuta i den digitale økonomi, forskydes magten fra borgeren
+til de platforme, der kontrollerer indsamling, behandling og
+anvendelse af disse data.
+
+Som reaktion på denne magtkoncentration er der opstået flere
+organiserede bevægelser, som fremhæver decentraliseret digital
+infrastruktur som et muligt alternativ. I en decentraliseret model
+er data og digitale aktiver ikke samlet hos enkelte platforme, men
+distribueret på tværs af netværk, hvor brugerne i højere grad 
+har kontrol over egne oplysninger og digitale ressourcer.
+
+Decentralisering rejser dog også nye politiske spørgsmål om ansvar,
+regulering og ulighed. Fraværet af centrale aktører kan vanskeliggøre
+både demokratisk kontrol og retlig beskyttelse, hvilket udfordrer
+statens traditionelle rolle som garant for borgernes rettigheder.
+
+\section{Problemformulering}
+Hvordan kan decentraliseret dataudveksling i en notesapplikation
+bidrage til øget digitalt ejerskab og reducere brugerens afhængighed af
+centrale platforme uden at gå på kompromis med tilgængelighed og 
+brugervenlighed?
+
+\section{Kravspecifikation}
+Formålet med en kravspecifikation er at skabe en entydig forståelse af
+produktet, så man kan fastlægge, dokumentere og kommunikere, hvad
+produktet skal gøre præcist, konkret og målbart.
+
+\subsection{Funktionalitet}
+Nedenstående tabel beskriver den ønskede funktionalitet for produktet
+og angiver dermed, om produktet er fuldført. Det giver et konkret
+udgangspunkt.
+
+Der benyttes tre kategorier: grænseflade, lagring og udveksling.
+Prioritering består af to niveauer: 1 = need-to-have, 2 = nice-to-have.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{|l|p{9cm}|c|}
+    \hline
+    \textbf{Krav} & \textbf{Beskrivelse} & \textbf{Prioritet} \\
+    \hline
+    G1 & Grænsefladen skal vise en oversigt over alle noter & 1 \\
+    \hline
+    G2 & Grænsefladen skal kunne oprette nye noter fra oversigten & 1 \\
+    \hline
+    G3 & Grænsefladen skal kunne tilføje synkroniseringsenheder & 1 \\
+    \hline
+    G4 & Grænsefladen skal kunne sortere noter i oversigten & 2 \\
+    \hline
+    L1 & Noter skal lagres persistent & 1 \\
+    \hline
+    L2 & Noter skal automatisk gemmes & 1 \\
+    \hline
+    L3 & Konfigurerede synkroniseringsenheder skal lagres persistent & 1 \\
+    \hline
+    U1 & Alle noter i oversigten skal synkroniseres med de konfigurerede
+         synkroniseringsenheder & 1 \\
+    \hline
+    U2 & Systemet skal håndtere offline-noter og synkronisere,
+         når netværk er tilgængeligt & 2 \\
+    \hline
+    U3 & Systemet skal håndtere konflikter ved samtidige ændringer & 2 \\
+    \hline
+  \end{tabular}
+  \caption{Krav og prioritet}
+  \label{tab:krav}
+\end{table}
+
+\subsection{Acceptkriterier}
+Nedenstående tabel beskriver konkrete og præcise kriterier for, at
+produktet opfylder de ovenstående krav, og dermed verificerer, at
+produktet er fuldført og virker efter hensigten.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{|l|p{8.5cm}|c|}
+    \hline
+    \textbf{Krav} & \textbf{Acceptkriterier} & \textbf{Prioritet} \\
+    \hline
+    G1 & Oversigten viser alle noter; listen kan scrolle;
+         ingen fejl ved mere end 1000 noter. & 1 \\
+    \hline
+    G2 & Bruger kan oprette ny note fra oversigten via tydelig knap;
+         note gemmes og vises umiddelbart. & 1 \\
+    \hline
+    G3 & Bruger kan tilføje synkroniseringsenhed via siden "Synkronisering";
+         enhed valideres, vises i enhedsliste og gemmes persist. & 1 \\
+    \hline
+    L1 & Noter gemmes persist mellem sessioner og
+         er tilgængelige efter genstart. & 1 \\
+    \hline
+    L2 & Ændringer gemmes automatisk ved fokusændring eller
+         inden for få sekunder efter redigering. & 1 \\
+    \hline
+    L3 & Konfigurerede synkroniseringsenheder er persistente og
+         tilgængelige efter genstart. & 1 \\
+    \hline
+    U1 & Alle noter i oversigten synkroniseres til alle synlige,
+         konfigurerede enheder; sync-status vises. & 1 \\
+    \hline
+    U2 & Lokale ændringer accepteres offline;
+         automatisk sync køres ved netværksgenoprettelse uden datatab. & 2 \\
+    \hline
+    U3 & Konflikter ved samtidige ændringer detekteres;
+         bruger tilbydes valg (behold lokal, behold ekstern, merge)
+         før overskrivning. & 2 \\
+    \hline
+  \end{tabular}
+  \caption{Acceptkriterier for kravene}
+  \label{tab:acceptkriterier}
+\end{table}
+
+\section{Anvendte teknologier}
+
+\subsection{MicroUI}
+MicroUI er et lille, bærbart immediate-mode layoutsystem skrevet i ANSI C,
+designet til indlejrede og ressourcerestrikterede systemer.
+
+Det er meget lille (ca. 1100 linjer ANSI C) og arbejder ud fra en kontekst,
+bestående af et forudallokeret hukommelsesområde, så der ikke foretages
+dynamisk allokering under drift. Biblioteket indeholder minimale, indbyggede
+kontroller: vindue, scrollbart panel, knap, slider, tekstfelt, label,
+checkbox og wordwrap-tekst. Det er renderer-agnostisk og kan anvendes med
+enhver renderingsmotor, der kan tegne rektangler og tekst. Designet er
+enkelt og udvidelsesvenligt, hvilket gør det nemt at tilføje
+brugerdefinerede kontroller. Layoutstyringen er letvægtig og enkel at
+bruge.
+
+MicroUI passer til indlejrede systemer, og projekter,
+der ønsker tæt kontrol over hukommelse og afhængigheder.
+
+\subsection{OpenGL ES 3.0}
+OpenGL for Embedded Systems (OpenGL ES eller GLES) er en udgave af
+OpenGL API'et til rendering af 2D‑ og 3D‑grafik, typisk
+hardware accelereret af et grafikkort. Det bruges primært til
+grafisk fremstilling i applikationer som spil og andre grafiktunge
+systemer.
+
+OpenGL ES er designet til indlejrede platforme — herunder smartphones,
+tablets og spilkonsoller — men anvendes også i webbrowsere via WebGL
+og kan køre native på stationære computere. Det er et af de mest
+udbredte 3D grafik API'er i historien.
+
+API'et er tvær platform. OpenGL ES forvaltes af
+non profit konsortiet Khronos Group, som også står bag Vulkan — et
+nyere API rettet mod enklere, højtydende drivere til både mobile og
+stationære enheder.
+
+\subsection{Tup}
+Tup er et filbaseret byggesystem til Linux, macOS og Windows. Det
+modtager en liste over filændringer og en retningsbestemt acyklisk graf
+(DAG) og bearbejder grafen for at udføre de nødvendige kommandoer til
+opdatering af afhængige filer. Tup udfører opdateringer med lav
+overhead ved hjælp af effektive algoritmer, så unødvendigt arbejde
+undgås, hvilket giver hurtigere byg og mindre vedligeholdelse af
+byggesystemet.
+
+Til beregning af ændringer i DAG'en benytter Tup den såkaldte
+beta-algoritme. Algoritmen analyserer indgående filændringer, identificerer
+påvirkede afhængigheder og prioriterer minimale opdateringer, så kun
+de nødvendige kommandoer køres. Det reducerer arbejde og sikrer hurtigere,
+deterministiske byg med lav overhead (se \cite{tup-algorithm}).
+
+\section{Arkitektur}
+
+\section{Opsætning}
+
+\printbibliography[title={Referencer}]
+
+\end{document}
