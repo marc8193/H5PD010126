@@ -163,7 +163,7 @@ Der har været tvivl om, hvorvidt immediate-mode layoutsystemer kræver
 betydeligt mere strøm end traditionelle retained-mode layoutsystemer. Målinger 
 viser dog, at dette ikke er tilfældet: under typiske forhold er energiforbruget 
 for immediate-mode layoutsystemer sammenligneligt med, eller lavere end,
-retained-mode layoutsystemer~\cite{smith2024_proving}. 
+retained-mode layoutsystemer (se Referencer \cite{smith2024_proving}).
 Dette indikerer, at frygten for øget strømforbrug ikke bør være en hindring
 for at vælge immediate-mode layoutsystemer, og at valget i stedet kan baseres på
 udviklingsmæssige og arkitektoniske fordele, såsom enkel genopbygning af den
@@ -173,7 +173,7 @@ Det ovenstående system fokuserer udelukkende på layoutet,
 mens hele renderingsprocessen er håndskrevet i OpenGL ES 3.0 for at sikre optimal ydeevne.
 Grafikrendering opnås ved hjælp af skræddersyet shader-kode,
 der effektivt kan tegne rektangler. Disse rektangler udgør en fundamental byggesten i de
-fleste grafiske brugergrænseflader (se \ref{lst:renderer}).
+fleste grafiske brugergrænseflader (se Listing \ref{lst:renderer}).
 
 \begin{lstlisting}[language=C, caption=Vertex og Fragment shader, label=lst:renderer]
   static const char* vertex_shader_source = R"(#version 300 es
@@ -244,7 +244,7 @@ dermed betragtes som usikker. I stedet anvendes en kombination af arena- og stac
 
 Arena-allokatoren muliggør effektiv håndtering af noter i hukommelsen,
 da allokeringen sker i en lineær buffer. Dette skaber en overskuelig mental model over den allokerede hukommelse og
-gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se \ref{fig:arena-allocate}).
+gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se Figure \ref{fig:arena-allocate}).
 
 \begin{figure}[h]
   \centering
@@ -256,7 +256,7 @@ gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se 
 
 Stack-allokatoren muliggør hurtig navigation frem og tilbage i brugergrænsefladen, idet den bygger på
 Last In, First Out (LIFO)-princippet. Denne tilgang minimerer risikoen for hukommelsesfejl og skaber samtidig en
-overskuelig mental model over den allokerede hukommelse (se \ref{fig:stack-allocate}).
+overskuelig mental model over den allokerede hukommelse (se Figure \ref{fig:stack-allocate}).
 
 \begin{figure}[h]
   \centering
@@ -273,7 +273,7 @@ decentrale enheder og noterne. Ved at organisere data i tabeller kan vi effektiv
 forespørge de forbindelser, der eksisterer mellem forskellige enheder og deres tilknyttede noter.
 SQL giver desuden mulighed for at køre komplekse forespørgsler, hvilket gør det lettere at opdatere,
 søge og analysere informationen. Denne struktur bidrager til et mere strømlinet og effektivt system,
-som kan skalere, efterhånden som der tilføjes flere enheder og noter (se \ref{fig:er-diagram}).
+som kan skalere, efterhånden som der tilføjes flere enheder og noter (se Figure \ref{fig:er-diagram}).
 
 \begin{figure}[h]
   \centering

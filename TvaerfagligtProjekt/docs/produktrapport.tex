@@ -1,4 +1,6 @@
 \documentclass{article}
+\usepackage{parskip}
+\usepackage{graphicx}
 \usepackage[backend=biber, style=numeric]{biblatex}
 \usepackage{hyperref} % must be last import
 
@@ -260,9 +262,37 @@ Til beregning af ændringer i DAG'en benytter Tup den såkaldte
 beta-algoritme. Algoritmen analyserer indgående filændringer, identificerer
 påvirkede afhængigheder og prioriterer minimale opdateringer, så kun
 de nødvendige kommandoer køres. Det reducerer arbejde og sikrer hurtigere,
-deterministiske byg med lav overhead (se \cite{tup-algorithm}).
+deterministiske byg med lav overhead (se Referencer \cite{tup-algorithm}).
 
 \section{Arkitektur}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=.9\textwidth]{architecture.png}
+  \caption{Arkitektur}
+  \label{fig:high-level-architecture}
+  \centering
+\end{figure}
+
+\subsection{App}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=.4\textwidth]{app-architecture.png}
+  \caption{App Arkitektur}
+  \label{fig:app-architecture}
+  \centering
+\end{figure}
+
+\newpage
+
+\subsection{Database}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=.74\textwidth]{er-diagram.png}
+  \caption{ER-diagram}
+  \label{fig:er-diagram}
+  \centering
+\end{figure}
+
 
 \section{Opsætning}
 
