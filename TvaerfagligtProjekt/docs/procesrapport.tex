@@ -284,6 +284,12 @@ som kan skalere, efterhånden som der tilføjes flere enheder og noter (se Figur
 \end{figure}
 
 \subsection{Byggesystem}
+Der anvendes et filbaseret byggesystem, som muliggør hurtige iterationer ved  
+at registrere filændringer og bygge en rettet acyklisk graf (DAG) over  
+afhængigheder. Systemet evaluerer DAG'en og udfører kun nødvendige  
+kommandoer for at opdatere afhængige filer. Opdateringerne sker med minimal  
+overhead, idet byggesystemet bruger effektive byggealgoritmer, der undgår  
+unødvendigt arbejde.
 
 \section{Begrænsninger}
 Hvis der havde været mere tid til rådighed, kunne projektet have udviklet sig til et mere færdigt produkt.
