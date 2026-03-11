@@ -1,7 +1,9 @@
 \documentclass{article}
 \usepackage{parskip}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage[backend=biber, style=numeric]{biblatex}
+\usepackage{listings}
 \usepackage{hyperref} % must be last import
 
 \addbibresource{produktrapport.bib}
@@ -264,17 +266,41 @@ påvirkede afhængigheder og prioriterer minimale opdateringer, så kun
 de nødvendige kommandoer køres. Det reducerer arbejde og sikrer hurtigere,
 deterministiske byg med lav overhead (se Referencer \cite{tup-algorithm}).
 
+\newpage
 \section{Arkitektur}
-\begin{figure}[h]
+Nedenstående figur viser den overordnede systemarkitektur.
+(se Figure \ref{fig:high-level-architecture}).
+
+\begin{figure}[H]
   \centering
-  \includegraphics[width=.9\textwidth]{architecture.png}
+  \includegraphics[width=1\textwidth]{architecture.png}
   \caption{Arkitektur}
   \label{fig:high-level-architecture}
   \centering
 \end{figure}
 
 \subsection{App}
-\begin{figure}[h]
+Appen er delt op i fire primære lag (se Figure \ref{fig:app-architecture}).
+
+Brugergrænsefladen præsenterer data og interaktioner for brugeren. Den
+indeholder skærmbilleder, UI‑komponenter, inputvalidering og præsentationslogik.
+UI’et kommunikerer med databehandlingslaget via veldefinerede API’er for at
+holde visning og forretningslogik adskilt.
+
+Databehandlingslaget rummer forretningslogik, tilstandshåndtering,
+inputbearbejdning og validering. Det håndterer synkronisering, konflikthåndtering
+og træffer beslutning om, hvilke operationer der skal udføres på data.
+
+Datalagringslaget er ansvarligt for vedvarende opbevaring. Det tilbyder
+abstrakte CRUD‑operationer, transaktionsstyring og sikkerhed, så data kan
+tilgås og beskyttes ensartet.
+
+Dataudvekslingslaget står for netværkskommunikation med andre enheder og
+signaling‑servere. Det understøtter peer‑to‑peer‑kommunikation — herunder
+enhedsopdagelse via signaling, direkte meddelelsesudveksling, forbindelsesstyring,
+genopretning ved fejl, sikre forbindelser, retry‑logik og batching.
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=.4\textwidth]{app-architecture.png}
   \caption{App Arkitektur}
@@ -282,12 +308,17 @@ deterministiske byg med lav overhead (se Referencer \cite{tup-algorithm}).
   \centering
 \end{figure}
 
-\newpage
-
 \subsection{Database}
-\begin{figure}[h]
+Der benyttes en relationel database med to tabeller: device og note. Note er
+en weak entity knyttet til device (se Figure \ref{fig:er-diagram}).
+
+Device-tabellen indeholder den givne enhed samt alle kendte enheder, som data
+udveksles mellem. Note-tabellen kan kun eksistere i relation til sin
+tilknyttede device.
+
+\begin{figure}[H]
   \centering
-  \includegraphics[width=.74\textwidth]{er-diagram.png}
+  \includegraphics[width=.75\textwidth]{er-diagram.png}
   \caption{ER-diagram}
   \label{fig:er-diagram}
   \centering
@@ -295,6 +326,16 @@ deterministiske byg med lav overhead (se Referencer \cite{tup-algorithm}).
 
 
 \section{Opsætning}
+Projektet er tilgængelig på Github (se Referencer \cite{marc8193_tvaerfagligtprojekt}).
+
+Forudsætninger for at bygge og installere projektet er Tup build system, Android
+SDK, NDK og platform-tools.
+
+\begin{lstlisting}[language=bash]
+$ tup init
+$ tup
+$ adb install build/note.apk
+\end{lstlisting}
 
 \printbibliography[title={Referencer}]
 

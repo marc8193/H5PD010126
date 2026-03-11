@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{parskip}
+\usepackage{float}
 \usepackage{graphicx}
 \usepackage[backend=biber, style=numeric]{biblatex}
 \usepackage{listings}
@@ -141,7 +142,7 @@ Tidsplanen er opdelt i perioder, da projektforløbet har været fragmenteret.
 Den indeholder kun implementeringsaktiviteter, da rapporten blev udarbejdet
 sideløbende med udviklingen.
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{tidsplan.png}
   \caption{Gantt-diagram}
@@ -246,7 +247,7 @@ Arena-allokatoren muliggør effektiv håndtering af noter i hukommelsen,
 da allokeringen sker i en lineær buffer. Dette skaber en overskuelig mental model over den allokerede hukommelse og
 gør det nemt at allokere eller frigive dele af bufferen samt hele bufferen (se Figure \ref{fig:arena-allocate}).
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{arena-allokering.png}
   \caption{Arena allokering}
@@ -258,7 +259,7 @@ Stack-allokatoren muliggør hurtig navigation frem og tilbage i brugergrænsefla
 Last In, First Out (LIFO)-princippet. Denne tilgang minimerer risikoen for hukommelsesfejl og skaber samtidig en
 overskuelig mental model over den allokerede hukommelse (se Figure \ref{fig:stack-allocate}).
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{stack-allokering.png}
   \caption{Stack allokering}
@@ -275,13 +276,20 @@ SQL giver desuden mulighed for at køre komplekse forespørgsler, hvilket gør d
 søge og analysere informationen. Denne struktur bidrager til et mere strømlinet og effektivt system,
 som kan skalere, efterhånden som der tilføjes flere enheder og noter (se Figure \ref{fig:er-diagram}).
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=.74\textwidth]{er-diagram.png}
+  \includegraphics[width=.75\textwidth]{er-diagram.png}
   \caption{ER-diagram}
   \label{fig:er-diagram}
   \centering
 \end{figure}
+
+\subsection{Dataudveksling}
+Der benyttes peer-to-peer-kommunikation mellem enheder, så hver enhed både kan
+initiere og modtage forbindelser direkte til andre enheder uden en central server.
+Dataudvekslingslaget håndterer enhedsopdagelse via en signaling-server, direkte
+meddelelsesudveksling, forbindelsesstyring og genopretning ved fejl, hvilket øger
+skalerbarhed og redundans.
 
 \subsection{Byggesystem}
 Der anvendes et filbaseret byggesystem, som muliggør hurtige iterationer ved  
