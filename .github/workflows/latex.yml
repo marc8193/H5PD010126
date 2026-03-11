@@ -25,10 +25,13 @@ jobs:
         run: |
           cd TvaerfagligtProjekt/docs
           pdflatex -interaction=nonstopmode procesrapport.tex
-          biber processrapport
+          biber procesrapport
           pdflatex -interaction=nonstopmode procesrapport.tex
+          pdflatex -interaction=nonstopmode procesrapport.tex
+
           pdflatex -interaction=nonstopmode produktrapport.tex
-          biber produktrapport
+          biber procesrapport
+          pdflatex -interaction=nonstopmode produktrapport.tex
           pdflatex -interaction=nonstopmode produktrapport.tex
       - name: Attach procesrapport.pdf to release
         uses: actions/upload-release-asset@v1
