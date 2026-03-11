@@ -1,22 +1,16 @@
-name: "Build LaTeX PDF and Attach to Release"
-
+name: Build LaTeX PDF and Attach to Release
 permissions:
   contents: write
-
-on:
+'on':
   release:
-    types: ["published"]  # Trigger only on new published release
-
+    types:
+      - published
 jobs:
   build-pdf:
     runs-on: ubuntu-22.04
-
     steps:
-      # 1. Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      # 2. Install LaTeX
       - name: Install LaTeX
         run: |
           sudo apt-get update
@@ -25,33 +19,28 @@ jobs:
             texlive-latex-recommended \
             texlive-latex-extra \
             texlive-fonts-recommended
-
-      # 3. Compile LaTeX PDF (twice for TOC)
       - name: Compile LaTeX to PDF
         run: |
           cd TværfagligtProjekt/docs
           pdflatex -interaction=nonstopmode procesrapport.tex
           pdflatex -interaction=nonstopmode procesrapport.tex
-		  pdflatex -interaction=nonstopmode produktrapport.tex
           pdflatex -interaction=nonstopmode produktrapport.tex
-		  
-      # 3. Attach PDFs to release
+          pdflatex -interaction=nonstopmode produktrapport.tex
       - name: Attach procesrapport.pdf to release
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: '${{ github.event.release.upload_url }}'
           asset_path: TværfagligtProjekt/docs/procesrapport.pdf
           asset_name: procesrapport.pdf
           asset_content_type: application/pdf
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
       - name: Attach produktrapport.pdf to release
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: '${{ github.event.release.upload_url }}'
           asset_path: TværfagligtProjekt/docs/produktrapport.pdf
           asset_name: produktrapport.pdf
           asset_content_type: application/pdf
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
