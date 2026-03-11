@@ -21,7 +21,7 @@ jobs:
             texlive-fonts-recommended
       - name: Compile LaTeX to PDF
         run: |
-          cd TværfagligtProjekt/docs
+          cd TvaerfagligtProjekt/docs
           pdflatex -interaction=nonstopmode procesrapport.tex
           pdflatex -interaction=nonstopmode procesrapport.tex
           pdflatex -interaction=nonstopmode produktrapport.tex
@@ -30,7 +30,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: '${{ github.event.release.upload_url }}'
-          asset_path: TværfagligtProjekt/docs/procesrapport.pdf
+          asset_path: TvaerfagligtProjekt/docs/procesrapport.pdf
           asset_name: procesrapport.pdf
           asset_content_type: application/pdf
         env:
@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: '${{ github.event.release.upload_url }}'
-          asset_path: TværfagligtProjekt/docs/produktrapport.pdf
+          asset_path: TvaerfagligtProjekt/docs/produktrapport.pdf
           asset_name: produktrapport.pdf
           asset_content_type: application/pdf
         env:
