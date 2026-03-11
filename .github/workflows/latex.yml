@@ -32,14 +32,26 @@ jobs:
           cd TværfagligtProjekt/docs
           pdflatex -interaction=nonstopmode procesrapport.tex
           pdflatex -interaction=nonstopmode procesrapport.tex
-
-      # 4. Upload PDF to release
-      - name: Attach PDF to Release
+		  pdflatex -interaction=nonstopmode produktrapport.tex
+          pdflatex -interaction=nonstopmode produktrapport.tex
+		  
+      # 3. Attach PDFs to release
+      - name: Attach procesrapport.pdf to release
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: TværfagligtProjekt/docs/procesrapport.pdf
           asset_name: procesrapport.pdf
+          asset_content_type: application/pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach produktrapport.pdf to release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: TværfagligtProjekt/docs/produktrapport.pdf
+          asset_name: produktrapport.pdf
           asset_content_type: application/pdf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
